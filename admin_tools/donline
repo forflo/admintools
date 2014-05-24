@@ -1,0 +1,146 @@
+#!/bin/bash
+#donline - A script for checking whether a cluster is online
+##
+
+##
+#Depends on basem, bashm and aa_term_colors.sh
+##
+. $BASH_LIB/funktionen/aa_term_colors.sh
+
+#CNT: pingcount - TMT: Timeout - FMT: Format - PB: PID Buffer
+CNT=1
+TMT=1
+FMT=human
+PB=
+
+BASHM=12345 #Sys-V keys for IPC-Resources. Could be randomized
+BASEM=12345
+OPTSTR="f:r:t:c:d:"
+REG="NTB008[Aa]"
+
+printhelp(){
+	clog 2 << EOF
+usage: $0 [-r <regex> ] 
+    [ -t <timeout> ] 
+    [ -c <count> ] 
+    [ -f <formatcode>  -d <delimiter> ]
+
+    <regex> := Regex the computernames have to match
+    <timeout> := The timeout value for the ping program in seconds
+    <count> := The number of tries ping should use
+	<delimiter> := The delimiter for formatcode
+	<formatcode> := The outputformat. Allowed values are
+      human => normal behaviour. Human readable with fancy colouring...
+      csv => comma separated value string. 
+      list => Between every entry newline is used as delimiter
+      delim => Separator of -d is used
+      num => only the number of online machines is printed
+      In csv, list and delim only the computernames of online machines is displayed!
+
+	Standards:
+	Format: human
+	Counts of pings: 1
+	Timeout (in sec): 1
+	Delimiter: ","
+EOF
+	exit 0
+}
+
+error(){
+	clog 1 Sie haben einen falschen Formatcode angegeben!
+	exit 1
+}
+
+if [ $# -eq 0 ]; then
+	printhelp
+fi
+
+#parses the commandline
+while getopts ${OPTSTR} input; do
+	case $input in
+		(r) REG="$OPTARG" ;;
+		(t) TMT="$OPTARG" ;;
+		(c) CNT="$OPTARG" ;;
+		(f) FMT="$OPTARG"
+			case $FMT in 
+				(csv) ;; 
+				(human) ;; 
+				(num) ;; 
+				(list) ;; 
+				(delim) ;; 
+				(*) error ;;  
+			esac 
+			;;
+		(d) DELIM="$OPTARG" ;;
+		(*) ;;
+	esac
+done
+
+#
+#Vielleicht besser:
+#mapfile NAMES < <(dnames -r "$REG")
+#
+FILE=$REPO/code/data/machines.list
+mapfile NAMES < <(grep "${REG}" "${FILE}" | cut -d " " -f 1 -)
+
+#creates a semaphor
+#creates a shared memory segment with length 10000 bytes
+basem --key $BASEM -c -i 1 && \
+	bashm --key $BASHM -c -l 10000 -p 660 && \
+	[ -t 1 ] && \
+	clog 2 Shm Segment und Semaphor erstellt!
+
+#Starts one bash process for every computername in NAMES
+for ((i=0; i<${#NAMES[*]}; i++)); do
+	if ping -W $TMT -c $CNT ${NAMES[i]} > /dev/null 2>&1; then
+		case $FMT in
+			(csv) 
+				#enter critical stage
+				basem -k $BASEM -p
+				#appends the computername to the shm segment
+				bashm -k $BASHM -s "$(bashm -k $BASHM -g),${NAMES[i]}"
+				#leave critical stage
+				basem -k $BASEM -v 
+				;;
+			(human) 
+				clog 2 Der Rechner ${NAMES[i]} ist online!  
+				;;
+			(num) 
+				basem -k $BASEM -p
+				bashm -k $BASHM -s $(($(bashm -k $BASHM -g) + 1)) 
+				basem -k $BASEM -v 
+				;;
+			(list) 
+				echo ${NAMES[i]} 
+				;;
+			(delim) 
+				basem -k $BASEM -p
+				bashm -k $BASHM -s "$(bashm -k $BASHM -g)${DELIM}${NAMES[i]}"
+				basem -k $BASEM -v
+				;;
+		esac
+	else
+		case $FMT in
+			(human) clog 1 Der Rechner ${NAMES[i]} ist nicht online!  ;;
+		esac
+	fi &
+	#build the waitbuffer PB
+	PB=$PB" "$!
+done
+#waits for the termination of all child processes
+wait $PB
+
+#print results
+case $FMT in
+	(csv) bashm -k $BASHM -g ;;
+	(num) bashm -k $BASHM -g ; echo "";;
+	(delim) bashm -k $BASHM -g ;;
+	(*) ;;
+esac
+
+#destroys the shared memory segment and the semaphor
+#check whether we are running connected to a terminal or not
+basem --key $BASEM -d && \
+	bashm --key $BASHM -d && \
+	[ -t 1 ] &&  \
+	clog 2 Shm Segment und Semaphor gelöscht!

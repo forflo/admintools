@@ -1,0 +1,179 @@
+#!/bin/bash
+#------>dcmd<------
+#Autor: Florian Mayer
+#Datum: 7.Sept.2013
+#
+#$0 	[-g <group> | --nreg <regex> | --ipreg <regex>] 
+#	[ -u <user> ] 
+#	[ -s ] 
+#	[ -p <portnumber> ] 
+#	[ --simultaneous ]
+#	<command>
+#
+
+. $BASH_LIB/funktionen/aa_term_colors.sh
+
+OPTSTRING="g:r:u:qsp:f:o:dm:"
+USER=$(whoami)
+QUIET=false
+SIMUL=false
+MACHINES=$REPO/code/data/machines.list
+PORT=22
+OUTDIR="$PWD"/dcmd.d/
+DRY="false"
+DIRECT=""
+
+CLIENT=ssh
+ADDARGS="-C"
+
+help(){
+	cat <<EOF
+$0 	[ -g <group> | -r <regex> | -m <regex> ] 
+    [ -u <user> ] 
+    [ -f <machinefile> ]
+    [ -q ] 
+    [ -p <portnumber> ] 
+    [ -s ]
+    [ -o <output dir> ] 
+    [ -d ]
+    <command>
+    
+    <group> := defines the group of computers to send commands to
+    <regex> := regex for computernames or ip addresses to match
+    <user> := defines the user to connect to
+    <machinefile> := the file to read machine names and mac addersses from
+    q := silent output if set
+    p := defines the portnumber the ssh command should use
+    s | simultaneous := 	specifies whether the commands should be run 
+    			all at the same time
+    d := dry run. Nothing is executed here
+    <command> := this is where the fun part starts!
+EOF
+}
+
+if [[ "$1" = @(--[hH][Ee][lL][pP]|-[hH]) || "$#" = 0 ]]; then
+	log_prompt(){
+		echo -n ""
+	}
+	help | clog 2
+	exit 0
+fi
+
+if [ "$(ssh-add -L)" = "The agent has no identities." ]; then
+	ssh-add
+fi
+
+while getopts $OPTSTRING current; do
+	case $current in
+		(g) GROUP="$OPTARG";;
+		(r) REG="$OPTARG";;
+		(u) USER="$OPTARG";;
+		(q) QUIET=true;;
+		(p) PORT=$OPTARG;;
+		(s) SIMUL=true;;
+		(f) MACHINES="$OPTARG";;
+		(o) OUTDIR="$OPTARG";;
+		(d) DRY="true";;
+		(m) DIRECT="$OPTARG";;
+	esac
+done
+shift $((OPTIND-1))
+COMMAND="$@"
+
+##
+# Fills the Arrays "MAC", "IP" and "NAME"
+# with fitting values
+##
+init(){
+	if [ -n "$REG" ]; then
+		mapfile TEMP < <(grep -E "$REG" $MACHINES)
+	elif [ -n "$GROUP" ]; then
+		mapfile TEMP < <(grep -E "$GROUP" $MACHINES)
+	elif [ -n "DIRECT" ]; then
+		local oldifs="$IFS"
+		IFS=","
+		set $DIRECT
+		for ((i=0;i<$#;i++)); do
+			TEMP[i]=${!i}
+		done
+		IFS="$oldifs"
+		set --
+	else
+		mapfile TEMP < <(grep '^[^#]' $MACHINES)
+	fi
+
+	for ((i=0; i<${#TEMP[*]}; i++)); do
+		set ${TEMP[i]}
+		NAME[i]=$1
+		MAC[i]=$2
+		if [ -z "$3" ]; then
+			IP[i]="none" # TODO resolve hostname!
+		else
+			IP[i]=$3
+		fi
+	done
+	unset TEMP
+}
+
+##
+# checks the output directory
+##
+setup_temp(){
+	if [ ! -d "$OUTDIR" ]; then
+		flog 1 bold The output directory could not be found! >&2
+		flog 1 bold I will create one for you in the current directory! >&2
+		mkdir -p "$OUTDIR" || flog 1 insufficient rights! && exit 1
+	fi
+}
+
+##
+# Sends the specified command to the initialized hosts
+##
+send_cmd(){
+	if [ "$QUIET" = "true" ]; then
+		if [ "$SIMUL" = true ]; then
+			for ((i=0; i<${#MAC[*]}; i++)); do
+				$CLIENT $ADDARGS -f -p $PORT ${USER}@${NAME[i]} "$COMMAND" > /dev/null
+			done
+		else
+			for ((i=0; i<${#MAC[*]}; i++)); do
+				$CLIENT $ADDARGS -p $PORT ${USER}@${NAME[i]} "$COMMAND" > /dev/null
+			done
+		fi 	
+	else
+		if [ "$SIMUL" = true ]; then
+			for ((i=0; i<${#MAC[*]}; i++)); do
+				$CLIENT $ADDARGS -f -p $PORT ${USER}@${NAME[i]} "$COMMAND" > ${OUTDIR}/${NAME[i]}.out
+			done
+		else
+			for ((i=0; i<${#MAC[*]}; i++)); do
+				clog 3 ${NAME[i]}-${IP[i]}: 
+				$CLIENT $ADDARGS -p $PORT ${USER}@${NAME[i]} "$COMMAND" | clog 2
+			done
+		fi 	
+	fi
+}
+
+##
+# For debugging use
+##
+print_opts(){
+	echo G: $GROUP && echo R: $REG && echo U: $USER && echo Q: $QUIET
+	echo P: $PORT && echo S: $SIMUL && echo C: $COMMAND && echo F: $MACHINES
+}
+
+print_arrays(){
+	for ((i=0; i<${#MAC[*]}; i++)); do
+		echo ${MAC[i]} " " ${IP[i]} " " ${NAME[i]}
+	done
+}
+
+init
+setup_temp
+if [ $DRY = "true" ]; then
+	print_opts
+	echo Das Kommando geht an folgende Rechner:
+	print_arrays
+else
+	send_cmd
+fi

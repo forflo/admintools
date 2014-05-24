@@ -1,0 +1,130 @@
+#!/bin/bash
+#Autor: Florian Mayer
+#Datum: 7.Sept.2013
+#
+#$0 	[-g <group> | --nreg <regex> | --ipreg <regex>] 
+#	[ -u <user> ] 
+#	[ -s ] 
+#	[ -p <portnumber> ] 
+#	[ --simultaneous ]
+#	<command>
+#
+. $BASH_LIB/funktionen/aa_term_colors.sh
+
+OPTSTRING="g:r:qf:w:m:"
+REG="NTB008[Aa]"
+DIRECT=""
+QUIET=false
+SIMUL=false
+MACHINES=$REPO/code/data/machines.list
+WAIT="0.2"
+
+
+PROG=wakeonlan
+
+help(){
+	cat <<EOF
+$0 	[ -g <group> | -r <regex>  | -m <machines list (csv)> ]
+		[ -f <machinefile> ]
+		[ -q ] 
+		[ -w <time to wait> ] 
+
+	<group> := defines the group of computers to send commands to
+	<regex> := regex for computernames or ip addresses to match
+	<machinefile> := the file to read machine names and mac addersses from
+	q := silent output if set
+	w := the time between the single magic pakets
+EOF
+}
+
+if [[ "$1" = @(--[hH][Ee][lL][pP]|-[hH]) ]]; then
+	log_prompt(){
+		echo -n ""
+	}
+	help | clog 2
+	exit 0
+fi
+
+while getopts $OPTSTRING current; do
+	case $current in
+		(g) GROUP=$OPTARG;;
+		(r) REG="$OPTARG";;
+		(q) QUIET=true;;
+		(f) MACHINES="$OPTARG";;
+		(w) WAIT="$OPTARG";;
+		(m) DIRECT="$OPTARG" ;;
+	esac
+done
+
+##
+# Fills the Arrays "MAC", "IP" and "NAME"
+# with fitting values
+##
+init(){
+	if [ -n "$REG" ]; then
+		mapfile TEMP < <(grep "$REG" $MACHINES)
+	elif [ -n "$GROUP" ]; then
+		mapfile TEMP < <(grep "$GROUP" $MACHINES)
+	elif [ -n "DIRECT" ]; then
+		local oldifs="$IFS"
+		IFS=","
+		set $DIRECT
+		for ((i=0;i<$#;i++)); do
+			TEMP[i]=${!i}
+		done
+		IFS="$oldifs"
+		set --
+	else
+		mapfile TEMP < <(grep '^[^#]' $MACHINES)
+	fi
+
+	for ((i=0; i<${#TEMP[*]}; i++)); do
+		set ${TEMP[i]}
+		NAME[i]=$1
+		MAC[i]=$2
+		if [ -z "$3" ]; then
+			IP[i]="none" # TODO resolve hostname!
+		else
+			IP[i]=$3
+		fi
+	done
+	unset TEMP
+}
+
+##
+# Sends the specified command to the initialized hosts
+##
+wakeup(){
+	if [ "$QUIET" = "true" ]; then
+		for ((i=0; i<${#MAC[*]}; i++)); do
+			sleep $WAIT
+			$PROG ${MAC[i]} > /dev/null
+		done
+	else
+		for ((i=0; i<${#MAC[*]}; i++)); do
+			sleep $WAIT
+			$PROG ${MAC[i]} | flog 2 bold
+		done
+	fi
+}
+
+##
+# For debugging use
+##
+print_opts(){
+	echo $GROUP
+	echo $REG
+	echo $QUIET
+	echo $MACHINES
+}
+
+print_arrays(){
+	for ((i=0; i<${#MAC[*]}; i++)); do
+		echo ${MAC[i]} " " ${IP[i]} " " ${NAME[i]}
+	done
+}
+
+init
+#print_opts
+#print_arrays
+wakeup

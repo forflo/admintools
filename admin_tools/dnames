@@ -1,0 +1,58 @@
+#!/bin/bash
+#Autor: Florian Mayer
+#Datum: 30.Sept.2013
+#Zweck: Gibt Computernamen, die in der machines.list-Datei gespeichert sind und
+#		auf den angegebenen Regex matchen, zeilenweise aus.
+##
+
+. $BASH_LIB/funktionen/aa_term_colors.sh
+
+OPTSTR="f:r:"
+REGEX="NTB008[Aa]"
+PC_FILE="$REPO/code/data/machines.list"
+
+usage(){
+	cat << EOF
+$0 [ -r <regex> ] [ -f <alternative machine file> ]
+EOF
+}
+
+if [[ "$1" = @(--[hH][Ee][lL][pP]|-[hH]) || "$#" = 0 ]]; then
+	log_prompt(){
+		echo -n ""
+	}
+	usage | clog 2
+	exit 0
+fi
+
+while getopts $OPTSTR input; do
+	case $input in
+		(f) PC_FILE=$OPTARG
+			;;
+		(r) REGEX=$OPTARG
+			;;
+		(*)
+			;;
+	esac
+done
+
+
+##
+# Fills the Array "NAME"
+# with fitting values
+##
+init(){
+	if [ -n "$REGEX" ]; then
+		mapfile TEMP < <(grep "$REGEX" "$PC_FILE")
+	fi
+
+	for ((i=0; i<${#TEMP[*]}; i++)); do
+		set ${TEMP[i]}
+		echo $1
+		set --
+	done
+	unset TEMP
+}
+
+init
+
