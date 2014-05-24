@@ -35,3 +35,11 @@ Calling them without any parameters results in the same behaviour.
 
 The scripts in the folder admin_scripts provide the same help mechanism
 as mentioned above.
+
+## Dependencies 
+
+The tool donline depends on the tools basem and bashm. Both tools are
+available at the following URIs
+
+* basem => https://github.com/forflo/basem
+* bashm => https://github.com/forflo/bashm
