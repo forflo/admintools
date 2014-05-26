@@ -17,7 +17,7 @@ Contains the base toolchain.
 
 ### admin_scripts
 
-Contains script that use the base toolchain. These scripts are commented.
+Contains scripts that use the base toolchain. These scripts are commented.
 
 ### legacy
 
