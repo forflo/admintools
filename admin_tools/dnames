@@ -5,11 +5,11 @@
 #		auf den angegebenen Regex matchen, zeilenweise aus.
 ##
 
-. $BASH_LIB/funktionen/aa_term_colors.sh
+. $BASH_LIB/functions/aa_term_colors.sh
 
 OPTSTR="f:r:"
 REGEX="NTB008[Aa]"
-PC_FILE="$REPO/code/data/machines.list"
+PC_FILE="$REPO/data/machines.list"
 
 usage(){
 	cat << EOF

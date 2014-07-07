@@ -5,7 +5,7 @@
 ##
 #Depends on basem, bashm and aa_term_colors.sh
 ##
-. $BASH_LIB/funktionen/aa_term_colors.sh
+. $BASH_LIB/functions/aa_term_colors.sh
 
 #CNT: pingcount - TMT: Timeout - FMT: Format - PB: PID Buffer
 CNT=1
@@ -80,7 +80,7 @@ done
 #Vielleicht besser:
 #mapfile NAMES < <(dnames -r "$REG")
 #
-FILE=$REPO/code/data/machines.list
+FILE=$REPO/data/machines.list
 mapfile NAMES < <(grep "${REG}" "${FILE}" | cut -d " " -f 1 -)
 
 #creates a semaphor

@@ -11,13 +11,13 @@
 #	<command>
 #
 
-. $BASH_LIB/funktionen/aa_term_colors.sh
+. $BASH_LIB/functions/aa_term_colors.sh
 
 OPTSTRING="g:r:u:qsp:f:o:dm:"
 USER=$(whoami)
 QUIET=false
 SIMUL=false
-MACHINES=$REPO/code/data/machines.list
+MACHINES=$REPO/data/machines.list
 PORT=22
 OUTDIR="$PWD"/dcmd.d/
 DRY="false"
