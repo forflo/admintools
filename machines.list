@@ -1,0 +1,135 @@
+#<name> <macaddress> <ipaddress (optional)> <groupname (optional)>
+#B008A
+NTB008A01.inf.fh-rosenheim.de  00:0f:fe:dc:f3:bc none B008A
+NTB008A02.inf.fh-rosenheim.de  00:0f:fe:dd:7a:8d none B008A
+NTB008A03.inf.fh-rosenheim.de  00:0f:fe:dd:7f:e1 none B008A
+NTB008A04.inf.fh-rosenheim.de  00:0f:fe:dd:84:4f none B008A
+NTB008A05.inf.fh-rosenheim.de  00:0f:fe:dd:79:89 none B008A
+NTB008A06.inf.fh-rosenheim.de  00:0f:fe:dd:7d:bb none B008A
+NTB008A07.inf.fh-rosenheim.de  00:0f:fe:dd:77:7b none B008A
+NTB008A08.inf.fh-rosenheim.de  00:0f:fe:dd:7a:b3 none B008A
+NTB008A09.inf.fh-rosenheim.de  00:0f:fe:d3:c9:af none B008A
+NTB008A10.inf.fh-rosenheim.de  00:0f:fe:dd:81:a7 none B008A
+NTB008A11.inf.fh-rosenheim.de  00:0f:fe:dd:83:d1 none B008A
+NTB008A12.inf.fh-rosenheim.de  00:0f:fe:dd:76:7b none B008A
+NTB008A13.inf.fh-rosenheim.de  00:0f:fe:dd:80:3d none B008A
+NTB008A14.inf.fh-rosenheim.de  00:0f:fe:dd:81:f3 none B008A
+NTB008A15.inf.fh-rosenheim.de  00:0f:fe:dd:7f:2b none B008A
+NTB008A16.inf.fh-rosenheim.de  00:0f:fe:dd:84:e7 none B008A
+
+#B011 old
+Old01108 00:0F:FE:8E:3B:3A 141.60.120.138  B008A
+Old01110 00:0F:FE:90:0C:2C 141.60.120.140  B008A
+Old01109 00:0F:FE:90:95:82 141.60.120.139  B008A
+Old01100 00:0F:FE:91:BF:8F 141.60.120.130  B008A
+Old01103 00:0F:FE:91:BC:F6 141.60.120.133  B008A
+Old01104 00:0F:FE:90:5B:22 141.60.120.134  B008A
+Old01106 00:0F:FE:90:4E:B8 141.60.120.136  B008A
+Old01101 00:0F:FE:90:92:24 141.60.120.131  B008A
+Old01102 00:0F:FE:90:54:8A 141.60.120.132  B008A
+Old01105 00:0F:FE:90:5A:FA 141.60.120.135  B008A
+Old01107 00:0F:FE:91:B6:5E 141.60.120.137  B008A
+
+#B011 new
+NTB01108.inf.fh-rosenheim.de 74:46:A0:9E:B9:60 141.60.120.138  B011
+NTB01107.inf.fh-rosenheim.de 74:46:A0:9E:B9:62 141.60.120.137  B011
+NTB01105.inf.fh-rosenheim.de 74:46:A0:9E:B9:4F 141.60.120.135  B011
+NTB01106.inf.fh-rosenheim.de 74:46:A0:9E:B7:C3 141.60.120.136  B011
+NTB01104.inf.fh-rosenheim.de 74:46:A0:A2:23:7B 141.60.120.134  B011
+NTB01103.inf.fh-rosenheim.de 74:46:A0:9E:B9:5A 141.60.120.133  B011
+NTB01102.inf.fh-rosenheim.de 74:46:A0:A2:23:A9 141.60.120.132  B011
+NTB01101.inf.fh-rosenheim.de 74:46:A0:A2:25:4E 141.60.120.131  B011
+NTB01111.inf.fh-rosenheim.de 74:46:A0:A2:25:B0 141.60.120.141  B011
+NTB01110.inf.fh-rosenheim.de 74:46:A0:9E:B8:97 141.60.120.140  B011
+NTB01109.inf.fh-rosenheim.de 74:46:A0:9E:B9:E5 141.60.120.139  B011
+
+#B007
+NTB00709.inf.fh-rosenheim.de 00:0F:FE:91:BF:68 none B007
+NTB00705.inf.fh-rosenheim.de 00:0F:FE:90:8E:A3 none B007
+NTB00706.inf.fh-rosenheim.de 00:0F:FE:90:90:63 none B007
+NTB00707.inf.fh-rosenheim.de 00:0F:FE:91:BE:22 none B007
+NTB00708.inf.fh-rosenheim.de 00:0F:FE:90:90:BF none B007
+NTB00704.inf.fh-rosenheim.de 00:0F:FE:90:8F:67 none B007
+NTB00702.inf.fh-rosenheim.de 00:0F:FE:90:92:E4 none B007
+NTB00701.inf.fh-rosenheim.de 00:0F:FE:90:90:95 none B007
+NTB00703.inf.fh-rosenheim.de 00:0F:FE:91:BC:EE none B007
+NTB00712.inf.fh-rosenheim.de 00:0F:FE:91:BD:14 none B007
+NTB00711.inf.fh-rosenheim.de 00:0F:FE:90:5A:F2 none B007
+NTB00710.inf.fh-rosenheim.de 00:0F:FE:90:56:A6 none B007
+
+#B008
+NTB00801.inf.fh-rosenheim.de 00:0F:FE:91:BD:DE none B008
+NTB00802.inf.fh-rosenheim.de 00:0F:FE:91:BF:28 none B008
+NTB00803.inf.fh-rosenheim.de 00:0F:FE:90:A3:9A none B008
+NTB00804.inf.fh-rosenheim.de 00:0F:FE:90:91:C4 none B008
+NTB00805.inf.fh-rosenheim.de 00:0F:FE:90:55:8C none B008
+NTB00806.inf.fh-rosenheim.de 00:0F:FE:90:90:83 none B008
+NTB00807.inf.fh-rosenheim.de 00:0F:FE:91:BD:22 none B008
+NTB00808.inf.fh-rosenheim.de 00:0F:FE:91:BF:24 none B008
+NTB00809.inf.fh-rosenheim.de 00:0F:FE:91:BC:8E none B008
+NTB00810.inf.fh-rosenheim.de 00:0F:FE:91:BF:26 none B008
+
+#B009
+NTB00909.inf.fh-rosenheim.de 00:0F:FE:90:91:BE none B009
+NTB00908.inf.fh-rosenheim.de 00:0F:FE:90:90:39 none B009
+NTB00907.inf.fh-rosenheim.de 00:0F:FE:90:91:4F none B009
+NTB00906.inf.fh-rosenheim.de 00:0F:FE:91:BD:FA none B009
+NTB00905.inf.fh-rosenheim.de 00:0F:FE:90:93:34 none B009
+NTB00904.inf.fh-rosenheim.de 00:0F:FE:90:90:0B none B009
+NTB00903.inf.fh-rosenheim.de 00:0F:FE:90:0C:9E none B009
+NTB00902.inf.fh-rosenheim.de 00:0F:FE:90:8B:8E none B009
+NTB00910.inf.fh-rosenheim.de 00:0F:FE:DD:89:87 none B009
+NTB00901.inf.fh-rosenheim.de 00:0F:FE:90:8D:EB none B009
+
+#B009A
+NTB009A06.inf.fh-rosenheim.de 3c:d9:2b:5e:ca:22 141.60.120.216 B009A
+NTB009A04.inf.fh-rosenheim.de 3c:d9:2b:5c:1a:40 141.60.120.214 B009A
+NTB009A03.inf.fh-rosenheim.de 3c:d9:2b:5c:18:eb 141.60.120.213 B009A
+NTB009A02.inf.fh-rosenheim.de 3c:d9:2b:5e:ca:9d 141.60.120.212 B009A
+NTB009A01.inf.fh-rosenheim.de 3c:d9:2b:5e:ca:86 141.60.120.211 B009A
+NTB009A08.inf.fh-rosenheim.de 3c:d9:2b:5e:ca:3a 141.60.120.218 B009A
+NTB009A09.inf.fh-rosenheim.de 3c:d9:2b:5e:c9:19 141.60.120.219 B009A
+NTB009A07.inf.fh-rosenheim.de 3c:d9:2b:5e:ca:17 141.60.120.217 B009A
+NTB009A12.inf.fh-rosenheim.de 3c:d9:2b:5c:19:c4 141.60.120.252 B009A
+NTB009A05.inf.fh-rosenheim.de 3c:d9:2b:5c:1a:13 141.60.120.215 B009A
+NTB009A10.inf.fh-rosenheim.de 3c:d9:2b:5e:ca:a0 141.60.120.250 B009A
+NTB009A11.inf.fh-rosenheim.de 3c:d9:2b:5e:ca:31 141.60.120.251 B009A
+
+#A103
+NTA10301.inf.fh-rosenheim.de 00:0F:FE:90:8F:91 141.60.125.50
+NTA10302.inf.fh-rosenheim.de 00:0F:FE:91:BD:32 141.60.125.51
+NTA10303.inf.fh-rosenheim.de 00:0F:FE:90:90:31 141.60.125.52
+NTA10304.inf.fh-rosenheim.de 00:0F:FE:90:90:57 141.60.125.53
+NTA10305.inf.fh-rosenheim.de 00:0F:FE:91:BC:F4 141.60.125.54
+NTA10306.inf.fh-rosenheim.de 00:0F:FE:90:8F:39 141.60.125.55
+NTA10307.inf.fh-rosenheim.de 00:0F:FE:91:BE:16 141.60.125.56
+NTA10309.inf.fh-rosenheim.de 00:0F:FE:90:92:D8 141.60.125.58
+NTA10310.inf.fh-rosenheim.de 00:0F:FE:90:8F:97 141.60.125.59
+NTA10311.inf.fh-rosenheim.de 00:0F:FE:90:8B:D6 141.60.125.60
+NTA10312.inf.fh-rosenheim.de 00:0F:FE:90:92:0C 141.60.125.61
+NTA10308.inf.fh-rosenheim.de 00:0F:FE:91:BF:89 141.60.125.57
+
+#A104
+NTA00412.inf.fh-rosenheim.de 08:2E:5F:0E:96:0D 141.60.125.185
+NTA00411.inf.fh-rosenheim.de 08:2E:5F:28:F6:A3 141.60.131.107
+NTA00401.inf.fh-rosenheim.de 24:BE:05:20:C3:20 141.60.125.70
+NTA00402.inf.fh-rosenheim.de 24:BE:05:20:C3:93 141.60.125.72
+NTA00403.inf.fh-rosenheim.de 24:BE:05:1D:8C:99 141.60.125.154
+NTA00404.inf.fh-rosenheim.de 24:BE:05:1D:8B:94 141.60.125.73
+NTA00405.inf.fh-rosenheim.de 24:BE:05:1D:8C:69 141.60.125.74
+NTA00406.inf.fh-rosenheim.de 24:BE:05:1D:8C:C6 141.60.125.75
+NTA00409.inf.fh-rosenheim.de 24:BE:05:20:C2:C2 141.60.131.118
+NTA00410.inf.fh-rosenheim.de 24:BE:05:1D:8C:13 
+NTA00408.inf.fh-rosenheim.de 24:BE:05:1D:8B:F8 141.60.131.188
+NTA00407.inf.fh-rosenheim.de 24:BE:05:1D:8C:17 141.60.125.76
+
+#A106
+nta10605 00-0F-FE-90-92-78 10.0.0.100(Bevorzugt)
+error while getting mac
+NTA00601  192.168.84.1(Bevorzugt)
+error while getting mac
+NTA00602  192.168.84.1(Bevorzugt)
+error while getting mac
+NTA00603  192.168.84.1(Bevorzugt)
+error while getting mac
+NTA00604  192.168.84.1(Bevorzugt)
