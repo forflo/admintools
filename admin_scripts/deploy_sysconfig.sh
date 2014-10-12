@@ -6,8 +6,8 @@
 #Anmerkungen: Das sudo vor rsync ist notwendig, weil die dir trees unter als Superuser erstellt werden mussten
 ##
 
-REMOTE=ntb008a01.inf.fh-rosenheim.de
-DIR_TREE=/home/florian/klingon/lab_root_ubuntu/
+REMOTE="ntb008a01.inf.fh-rosenheim.de"
+DIR_TREE="/home/florian/klingon/lab_root_ubuntu/"
 DEST_TREE=/
 
 debug(){
@@ -19,9 +19,10 @@ usage(){
 usage $0 [ -s <source dir tree>] [ -r <remote machine> ] [ -d <destination path> ]
     paths have to be comma separated without spaces between commas
     defaults:
-        -s = $DIR_TREE
-        -r = $REMOTE
-        -d = $DEST_TREE
+        -s := $DIR_TREE
+        -r := $REMOTE
+        -d := $DEST_TREE
+        -h := this help
 EOF
 	exit 0
 }
@@ -40,6 +41,9 @@ while getopts $OPTSTR input; do
 		(s) DIR_TREE="$OPTARG"
 			;;
 		(r) REMOTE="$OPTARG"
+			;;
+		(h) 
+			usage
 			;;
 		(*)
 			usage
