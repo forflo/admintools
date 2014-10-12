@@ -23,9 +23,12 @@ usage $0 [ -f <paths and files>] [ -r <remote machine> ] [ -d <destination path>
     paths have to be comma separated without spaces between commas
     defaults:
         -f := $FILES_PATHS
+		default: "home/betrisys,root,boot,etc"
         -r := $REMOTE
+		default: "root@ntb008a01.inf.fh-rosenheim.de"
         -d := $DEST_PATH
-	-h := this help
+		default: "/home/florian/klingon/lab_root_ubuntu/
+		-h := this help
 EOF
 }
 
