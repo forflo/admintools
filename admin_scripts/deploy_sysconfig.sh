@@ -1,9 +1,10 @@
 #!/bin/bash
-#Autor: Florian Mayer
-#Datum: 30.Sept.2013
-#Zweck: Synchronisiert einen vorher mit take_dirtree geholten Verzeichnisbaum 
-#		mit einem Verzeichnisbaum einer Remotemaschine
-#Anmerkungen: Das sudo vor rsync ist notwendig, weil die dir trees unter als Superuser erstellt werden mussten
+#
+# Autor: Florian Mayer
+# Datum: 30.Sept.2013
+# Zweck: Synchronisiert einen vorher mit take_dirtree geholten Verzeichnisbaum 
+#   mit einem Verzeichnisbaum einer Remotemaschine
+# Anmerkungen: Das sudo vor rsync ist notwendig, weil die dir trees unter als Superuser erstellt werden mussten
 ##
 
 REMOTE="ntb008a01.inf.fh-rosenheim.de"

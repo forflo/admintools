@@ -9,7 +9,7 @@
 ##
 
 DEST_PATH=/home/florian/klingon/lab_root_ubuntu/
-FILES_PATHS="home/betrisys,root,boot,etc" #comma separated
+FILES_PATHS="etc/admin,etc/X11" #comma separated
 REMOTE="root@ntb008a01.inf.fh-rosenheim.de"
 OPTSTR="hd:f:r:"
 
@@ -23,11 +23,8 @@ usage $0 [ -f <paths and files>] [ -r <remote machine> ] [ -d <destination path>
     paths have to be comma separated without spaces between commas
     defaults:
         -f := $FILES_PATHS
-		default: "home/betrisys,root,boot,etc"
         -r := $REMOTE
-		default: "root@ntb008a01.inf.fh-rosenheim.de"
         -d := $DEST_PATH
-		default: "/home/florian/klingon/lab_root_ubuntu/
 		-h := this help
 EOF
 }
