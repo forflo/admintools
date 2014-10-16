@@ -11,8 +11,6 @@
 #	<command>
 #
 
-. $BASH_LIB/functions/aa_term_colors.sh
-
 OPTSTRING="g:r:u:qsp:f:o:dm:"
 USER=$(whoami)
 QUIET=false
@@ -26,65 +24,20 @@ DIRECT=""
 CLIENT=ssh
 ADDARGS="-C"
 
-help(){
-	cat <<EOF
-$0 	[ -g <group> | -r <regex> | -m <regex> ] 
-    [ -u <user> ] 
-    [ -f <machinefile> ]
-    [ -q ] 
-    [ -p <portnumber> ] 
-    [ -s ]
-    [ -o <output dir> ] 
-    [ -d ]
-    <command>
-    
-    <group> := defines the group of computers to send commands to
-    <regex> := regex for computernames or ip addresses to match
-    <user> := defines the user to connect to
-    <machinefile> := the file to read machine names and mac addersses from
-    q := silent output if set
-    p := defines the portnumber the ssh command should use
-    s | simultaneous := 	specifies whether the commands should be run 
-    			all at the same time
-    d := dry run. Nothing is executed here
-    <command> := this is where the fun part starts!
-EOF
-}
+dcmd_init(){
+	if [ -x $BASH_LIB/functions/aa_term_colors.sh ]; then
+		. $BASH_LIB/functions/aa_term_colors.sh || {
+			echo "[init()]" Could not properly souce aa_term_colors.sh
+			return 1
+		}
+	else
+		function clog(){
+			shift
+			echo "$@"
+			return 0
+		}
+	fi
 
-if [[ "$1" = @(--[hH][Ee][lL][pP]|-[hH]) || "$#" = 0 ]]; then
-	log_prompt(){
-		echo -n ""
-	}
-	help | clog 2
-	exit 0
-fi
-
-if [ "$(ssh-add -L)" = "The agent has no identities." ]; then
-	ssh-add
-fi
-
-while getopts $OPTSTRING current; do
-	case $current in
-		(g) GROUP="$OPTARG";;
-		(r) REG="$OPTARG";;
-		(u) USER="$OPTARG";;
-		(q) QUIET=true;;
-		(p) PORT=$OPTARG;;
-		(s) SIMUL=true;;
-		(f) MACHINES="$OPTARG";;
-		(o) OUTDIR="$OPTARG";;
-		(d) DRY="true";;
-		(m) DIRECT="$OPTARG";;
-	esac
-done
-shift $((OPTIND-1))
-COMMAND="$@"
-
-##
-# Fills the Arrays "MAC", "IP" and "NAME"
-# with fitting values
-##
-init(){
 	if [ -n "$REG" ]; then
 		mapfile TEMP < <(grep -E "$REG" $MACHINES)
 	elif [ -n "$GROUP" ]; then
@@ -113,45 +66,124 @@ init(){
 		fi
 	done
 	unset TEMP
+
+	return 0
 }
 
-##
-# checks the output directory
-##
-setup_temp(){
-	if [ ! -d "$OUTDIR" ]; then
-		flog 1 bold The output directory could not be found! >&2
-		flog 1 bold I will create one for you in the current directory! >&2
-		mkdir -p "$OUTDIR" || flog 1 insufficient rights! && exit 1
+help(){
+	cat <<EOF
+$0 	[ -g <group> | -r <regex> | -m <regex> ] 
+    [ -u <user> ] 
+    [ -f <machinefile> ]
+    [ -q ] 
+    [ -p <portnumber> ] 
+    [ -s ]
+    [ -o <output dir> ] 
+    [ -d ]
+    <command>
+    
+    <group> := defines the group of computers to send commands to
+    <regex> := regex for computernames or ip addresses to match
+    <user> := defines the user to connect to
+    <machinefile> := the file to read machine names and mac addersses from
+    q := silent output if set
+    p := defines the portnumber the ssh command should use
+    s | simultaneous := 	specifies whether the commands should be run 
+    			all at the same time
+    d := dry run. Nothing is executed here
+    <command> := this is where the fun part starts!
+EOF
+}
+
+dcmd_initAgent(){
+	if [ "$(ssh-add -L)" = "The agent has no identities." ]; then
+		ssh-add || {
+			clog 2 "[dcmd_initAgent()]" Ssh-add could not be executed properly
+			return 1
+		}
 	fi
+
+	return 0
+}
+
+dcmd_parseArgs(){
+	while getopts $OPTSTRING current; do
+		case $current in
+			(g) GROUP="$OPTARG";;
+			(r) REG="$OPTARG"
+				[ -z "$REG" ] && {
+					clog 2 "[dcmd_parseArgs()]" Please provide an REGEX!
+					return 1
+				} ;;
+			(u) USER="$OPTARG";;
+			(q) QUIET=true;;
+			(p) PORT=$OPTARG;;
+			(s) SIMUL=true;;
+			(f) MACHINES="$OPTARG"
+				[ ! -f "$MACHINES" ] && {
+					clog 1 "[dcmd_parseArgs()]" "Invalid filename for machines file!"
+					return 1
+				} ;;
+			(o) OUTDIR="$OPTARG"
+				[ ! -d "$OUTDIR" ] && {
+					clog 1 "[dcmd_parseArgs()]" The output directory could not be found!
+					clog 2 "[dcmd_parseArgs()]" Will create directory the current directory.
+					mkdir -p "$OUTDIR" || {
+						clog 1 "[dcmd_parseArgs()]" Error "while" creating \
+							foler. Maybe Insufficient rights?
+						return 1
+					}
+				} ;;
+			(d) DRY="true";;
+			(m) DIRECT="$OPTARG";;
+			(*) clog 1 "[dcmd_parseArgs()]" Invalid option flag
+				return 1;;
+		esac
+	done
+	shift $((OPTIND-1))
+	COMMAND="$@"
+
+	return 0
 }
 
 ##
 # Sends the specified command to the initialized hosts
 ##
-send_cmd(){
+dcmd_sendCmd(){
 	if [ "$QUIET" = "true" ]; then
 		if [ "$SIMUL" = true ]; then
 			for ((i=0; i<${#MAC[*]}; i++)); do
-				$CLIENT $ADDARGS -f -p $PORT ${USER}@${NAME[i]} "$COMMAND" > /dev/null
+				$CLIENT $ADDARGS -f -p $PORT ${USER}@${NAME[i]} "$COMMAND" > /dev/null || {
+					return 1
+				}
 			done
 		else
 			for ((i=0; i<${#MAC[*]}; i++)); do
-				$CLIENT $ADDARGS -p $PORT ${USER}@${NAME[i]} "$COMMAND" > /dev/null
+				$CLIENT $ADDARGS -p $PORT ${USER}@${NAME[i]} "$COMMAND" > /dev/null || {
+					return 1
+				}
 			done
 		fi 	
 	else
 		if [ "$SIMUL" = true ]; then
 			for ((i=0; i<${#MAC[*]}; i++)); do
-				$CLIENT $ADDARGS -f -p $PORT ${USER}@${NAME[i]} "$COMMAND" > ${OUTDIR}/${NAME[i]}.out
+				$CLIENT $ADDARGS -f -p $PORT ${USER}@${NAME[i]} "$COMMAND" > ${OUTDIR}/${NAME[i]}.out || {
+					clog 1 "[dcmd_sendCmd()]" "Command for computer ${NAME[i]} terminated with != 0"
+					return 1
+				}
 			done
 		else
 			for ((i=0; i<${#MAC[*]}; i++)); do
 				clog 3 ${NAME[i]}-${IP[i]}: 
-				$CLIENT $ADDARGS -p $PORT ${USER}@${NAME[i]} "$COMMAND" | clog 2
+				$CLIENT $ADDARGS -p $PORT ${USER}@${NAME[i]} "$COMMAND" | clog 2 || {
+					clog 1 "[dcmd_sendCmd()]" "Command for computer ${NAME[i]} terminated with != 0"
+					return 1
+				}
 			done
 		fi 	
 	fi
+
+	return 0
 }
 
 ##
@@ -168,12 +200,28 @@ print_arrays(){
 	done
 }
 
-init
-setup_temp
-if [ $DRY = "true" ]; then
-	print_opts
-	echo Das Kommando geht an folgende Rechner:
-	print_arrays
-else
-	send_cmd
-fi
+main(){
+	dcmd_init || {
+		clog 1 "[main()]" Could not initialize script!
+		return 1
+	}
+
+	dcmd_initAgent || {
+		clog 1 "[main()]" Could not deal with ssh agent!
+		return 1
+	}
+
+	dcmd_parseArgs || {
+		clog 1 "[main()]" Could not parse Arguments!
+		return 1
+	}
+
+	dcmd_sendCmd || {
+		clog 1 "[main()]" "Error while sending commands!"
+		return 1
+	}
+
+	return 0
+}
+
+main && exit 0 || exit 1
