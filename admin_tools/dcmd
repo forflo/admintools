@@ -1,15 +1,17 @@
 #!/bin/bash
-#------>dcmd<------
-#Autor: Florian Mayer
-#Datum: 7.Sept.2013
 #
-#$0 	[-g <group> | --nreg <regex> | --ipreg <regex>] 
+# Autor: Florian Mayer
+# Datum: 7.Sept.2013
+# Depends: shellyCode
+#
+# $0 	[-g <group> | --nreg <regex> | --ipreg <regex>] 
 #	[ -u <user> ] 
 #	[ -s ] 
 #	[ -p <portnumber> ] 
 #	[ --simultaneous ]
 #	<command>
 #
+##
 
 OPTSTRING="g:r:u:qsp:f:o:dm:"
 USER=$(whoami)
@@ -25,9 +27,19 @@ CLIENT=ssh
 ADDARGS="-C"
 
 dcmd_init(){
-	if [ -x $BASH_LIB/functions/aa_term_colors.sh ]; then
+	local temp=()
+
+	if type clog > /dev/null 
+		echo "[init()]" Logging function exists in your environment
+		echo "	" will choose that one
+	elif [ -x $BASH_LIB/functions/aa_term_colors.sh -a -x $BASH_LIB/functions/logger.sh ]; then
 		. $BASH_LIB/functions/aa_term_colors.sh || {
 			echo "[init()]" Could not properly souce aa_term_colors.sh
+			return 1
+		}
+
+		. $BASH_LIB/functions/logger.sh || {
+			echo "[init()]" Could not properly souce logger.sh
 			return 1
 		}
 	else
@@ -39,24 +51,24 @@ dcmd_init(){
 	fi
 
 	if [ -n "$REG" ]; then
-		mapfile TEMP < <(grep -E "$REG" $MACHINES)
+		mapfile temp < <(grep -E "$REG" $MACHINES)
 	elif [ -n "$GROUP" ]; then
-		mapfile TEMP < <(grep -E "$GROUP" $MACHINES)
+		mapfile temp < <(grep -E "$GROUP" $MACHINES)
 	elif [ -n "DIRECT" ]; then
 		local oldifs="$IFS"
 		IFS=","
 		set $DIRECT
 		for ((i=0;i<$#;i++)); do
-			TEMP[i]=${!i}
+			temp[i]=${!i}
 		done
 		IFS="$oldifs"
 		set --
 	else
-		mapfile TEMP < <(grep '^[^#]' $MACHINES)
+		mapfile temp < <(grep '^[^#]' $MACHINES)
 	fi
 
-	for ((i=0; i<${#TEMP[*]}; i++)); do
-		set ${TEMP[i]}
+	for ((i=0; i<${#temp[*]}; i++)); do
+		set ${temp[i]}
 		NAME[i]=$1
 		MAC[i]=$2
 		if [ -z "$3" ]; then
@@ -65,7 +77,6 @@ dcmd_init(){
 			IP[i]=$3
 		fi
 	done
-	unset TEMP
 
 	return 0
 }
@@ -186,18 +197,20 @@ dcmd_sendCmd(){
 	return 0
 }
 
-##
-# For debugging use
-##
-print_opts(){
+dcmd_debug(){
 	echo G: $GROUP && echo R: $REG && echo U: $USER && echo Q: $QUIET
-	echo P: $PORT && echo S: $SIMUL && echo C: $COMMAND && echo F: $MACHINES
-}
+	echo P: $PORT && echo S: $SIMUL && echo F: $MACHINES 
+	echo Dest: $DEST
 
-print_arrays(){
-	for ((i=0; i<${#MAC[*]}; i++)); do
-		echo ${MAC[i]} " " ${IP[i]} " " ${NAME[i]}
+	for ((j=0; j<${#SOURCE[*]}; j++)); do
+		echo FILE: ${SOURCE[j]}
+		for ((i=0; i<${#MAC[*]}; i++)); do
+			echo ${MAC[i]} " " ${IP[i]} " " ${NAME[i]}
+			echo $CLIENT $ADDARGS -p $PORT ${USER}@${NAME[i]} "$COMMAND"
+		done
 	done
+
+	return 0
 }
 
 main(){
@@ -216,10 +229,15 @@ main(){
 		return 1
 	}
 
-	dcmd_sendCmd || {
-		clog 1 "[main()]" "Error while sending commands!"
-		return 1
-	}
+	if [ $DEBUG = "true" ]; then
+		dcmd_debug
+		return 0
+	else 
+		dcmd_sendCmd || {
+			clog 1 "[main()]" "Error while sending commands!"
+			return 1
+		}
+	fi
 
 	return 0
 }
