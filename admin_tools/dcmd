@@ -20,16 +20,14 @@ SIMUL=false
 MACHINES=$REPO/data/machines.list
 PORT=22
 OUTDIR="$PWD"/dcmd.d/
-DRY="false"
+DEBUG="false"
 DIRECT=""
 
 CLIENT=ssh
 ADDARGS="-C"
 
-dcmd_init(){
-	local temp=()
-
-	if type clog > /dev/null 
+dcmd_loadLibs(){
+	if type clog > /dev/null; then
 		echo "[init()]" Logging function exists in your environment
 		echo "	" will choose that one
 	elif [ -x $BASH_LIB/functions/aa_term_colors.sh -a -x $BASH_LIB/functions/logger.sh ]; then
@@ -49,12 +47,17 @@ dcmd_init(){
 			return 0
 		}
 	fi
+}
+
+
+dcmd_init(){
+	local temp=()
 
 	if [ -n "$REG" ]; then
 		mapfile temp < <(grep -E "$REG" $MACHINES)
 	elif [ -n "$GROUP" ]; then
 		mapfile temp < <(grep -E "$GROUP" $MACHINES)
-	elif [ -n "DIRECT" ]; then
+	elif [ -n "$DIRECT" ]; then
 		local oldifs="$IFS"
 		IFS=","
 		set $DIRECT
@@ -118,6 +121,10 @@ dcmd_initAgent(){
 }
 
 dcmd_parseArgs(){
+	if [ "$#" -eq 0 -o "$1" = "--help" -o "$1" = "-h" ]; then
+		help && exit 0
+	fi
+
 	while getopts $OPTSTRING current; do
 		case $current in
 			(g) GROUP="$OPTARG";;
@@ -214,9 +221,8 @@ dcmd_debug(){
 }
 
 main(){
-	dcmd_init || {
-		clog 1 "[main()]" Could not initialize script!
-		return 1
+	dcmd_loadLibs || {
+		clog 1 "[main()]" Could not load libraries!
 	}
 
 	dcmd_initAgent || {
@@ -229,7 +235,12 @@ main(){
 		return 1
 	}
 
-	if [ $DEBUG = "true" ]; then
+	dcmd_init || {
+		clog 1 "[main()]" Could not initialize script!
+		return 1
+	}
+
+	if [ "$DEBUG" = "true" ]; then
 		dcmd_debug
 		return 0
 	else 
