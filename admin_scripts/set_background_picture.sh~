@@ -7,8 +7,8 @@
 #$2: Optinaler regex, der als Argument an dcmd weitergegeben wird
 ####
 
-. $BASH_LIB/aa_term_colors.sh
-. $BASH_LIB/aa_random.sh
+. $BASH_LIB/funktionen/aa_term_colors.sh
+. $BASH_LIB/funktionen/aa_random.sh
 
 prompt_func=no_prompt
 

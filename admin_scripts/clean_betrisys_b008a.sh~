@@ -5,7 +5,7 @@
 #	spielt Ursprungsdaten auf.
 ###
 
-. $BASH_LIB/aa_term_colors.sh
+. $BASH_LIB/funktionen/aa_term_colors.sh
 
 if [ ! -d "$1" ]; then
 	clog 1 Bitte geben Sie einen gültigen Ordner als Parameter an!

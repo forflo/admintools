@@ -5,7 +5,7 @@
 #	Skript auf allen spezifizierten Rechnern aus
 ##
 
-. $BASH_LIB/aa_term_colors.sh
+. $BASH_LIB/funktionen/aa_term_colors.sh
 
 OPTSTR="r:u:p:qs"
 print_help(){

@@ -8,7 +8,7 @@
 #$2: 	Zielpfad
 ##
 
-. $BASH_LIB/aa_term_colors.sh
+. $BASH_LIB/funktionen/aa_term_colors.sh
 
 MOD=750
 USER=penelope
