@@ -17,7 +17,7 @@ OPTSTRING="g:r:u:qsp:f:o:dm:"
 USER=$(whoami)
 QUIET=false
 SIMUL=false
-MACHINES=$REPO/data/machines.list
+MACHINES=../machines.list
 PORT=22
 OUTDIR="$PWD"/dcmd.d/
 DEBUG="false"
@@ -30,13 +30,13 @@ dcmd_loadLibs(){
 	if type clog > /dev/null; then
 		echo "[init()]" Logging function exists in your environment
 		echo "	" will choose that one
-	elif [ -x $BASH_LIB/functions/aa_term_colors.sh -a -x $BASH_LIB/functions/logger.sh ]; then
-		. $BASH_LIB/functions/aa_term_colors.sh || {
+	elif [ -x $BASH_LIB/aa_term_colors.sh -a -x $BASH_LIB/logger.sh ]; then
+		. $BASH_LIB/aa_term_colors.sh || {
 			echo "[init()]" Could not properly souce aa_term_colors.sh
 			return 1
 		}
 
-		. $BASH_LIB/functions/logger.sh || {
+		. $BASH_LIB/logger.sh || {
 			echo "[init()]" Could not properly souce logger.sh
 			return 1
 		}

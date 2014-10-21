@@ -12,7 +12,7 @@
 #
 
 OPTSTRING="g:r:u:qsp:f:dc:"
-MACHINES=$REPO/data/machines.list
+MACHINES=../machines.list
 SIMUL=false
 DEBUG=false
 QUIET=false

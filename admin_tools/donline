@@ -5,7 +5,7 @@
 ##
 #Depends on basem, bashm and aa_term_colors.sh
 ##
-. $BASH_LIB/functions/aa_term_colors.sh
+. $BASH_LIB/aa_term_colors.sh
 
 #CNT: pingcount - TMT: Timeout - FMT: Format - PB: PID Buffer
 CNT=1

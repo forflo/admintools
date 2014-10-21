@@ -9,14 +9,14 @@
 #	[ --simultaneous ]
 #	<command>
 #
-. $BASH_LIB/functions/aa_term_colors.sh
+. $BASH_LIB/aa_term_colors.sh
 
 OPTSTRING="g:r:qf:w:m:"
 REG="NTB008[Aa]"
 DIRECT=""
 QUIET=false
 SIMUL=false
-MACHINES=$REPO/data/machines.list
+MACHINES=../machines.list
 WAIT="0.2"
 
 
