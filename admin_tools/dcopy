@@ -21,10 +21,9 @@ DIRECT=""
 USER=$(whoami)
 PORT=22
 CLIENT=scp
-ADDARGS="-C"
 
 help(){
-	cat <<EOF
+	clog 2 <<EOF
 $0 	[ -g <group> | -r <regex> | -m <regex> ] 
 		[ -u <user> ] 
 		[ -f <machinefile> | -c <csv-String> ]
@@ -50,25 +49,30 @@ $0 	[ -g <group> | -r <regex> | -m <regex> ]
 	<source files/dirs ...> := The name should be sufficient information
 	<destination file/dir> := same as above
 EOF
+
+	return 0
 }
 
-dcopy_init(){
-	local temp=()
-
-	if type clog > /dev/null 
-		echo "[init()]" Logging function exists in your environment
+dcopy_loadLibs(){
+	if type clog > /dev/null 2>&1; then
+		echo "[dcopy_loadLibs()]" Logging function exists in your environment
 		echo "	" will choose that one
-	elif [ -x $BASH_LIB/functions/aa_term_colors.sh -a -x $BASH_LIB/functions/logger.sh ]; then
-		. $BASH_LIB/functions/aa_term_colors.sh || {
-			echo "[init()]" Could not properly souce aa_term_colors.sh
+		[ ! -x $BASH_LIB/aa_term_colors.sh ] && {
+			echo "[dcopy_loadLibs()]" "Missing file for term colors!"
+			return 1
+		}
+	elif [ -x $BASH_LIB/aa_term_colors.sh -a -x $BASH_LIB/logger.sh ]; then
+		. $BASH_LIB/aa_term_colors.sh || {
+			echo "[dcopy_loadLibs()]" Could not properly source aa_term_colors.sh
 			return 1
 		}
 
-		. $BASH_LIB/functions/logger.sh || {
-			echo "[init()]" Could not properly souce logger.sh
+		. $BASH_LIB/logger.sh || {
+			echo "[dcopy_loadLibs()]" Could not properly source logger.sh
 			return 1
 		}
 	else
+		echo "[dcopy_loadLibs()]" Creating dummy logging function 
 		function clog(){
 			shift
 			echo "$@"
@@ -76,19 +80,22 @@ dcopy_init(){
 		}
 	fi
 
+	return 0
+}
+
+dcopy_init(){
+	local temp=()
+
 	if [ -n "$REG" ]; then
 		mapfile temp < <(grep -E "$REG" $MACHINES)
 	elif [ -n "$GROUP" ]; then
 		mapfile temp < <(grep -E "$GROUP" $MACHINES)
 	elif [ -n "DIRECT" ]; then
-		local oldifs="$IFS"
-		IFS=","
-		set $DIRECT
-		for ((i=0;i<$#;i++)); do
-			temp[i]=${!i}
+		for i in $(echo "$DIRECT" | tr "," " "); do
+			echo ${i}
+			temp[$dir]=${i}
+			((dir++))
 		done
-		IFS="$oldifs"
-		set --
 	else
 		mapfile temp < <(grep '^[^#]' $MACHINES)
 	fi
@@ -119,14 +126,15 @@ dcopy_initAgent(){
 }
 
 dcopy_parseArgs(){
+	if [ "$#" = "0" -o "$1" = "--help" -o "$1" = "-h" ]; then
+		help
+		return 1
+	fi
+
 	while getopts $OPTSTRING current; do
 		case $current in
 			(g) GROUP=$OPTARG;;
-			(r) REG="$OPTARG"
-				[ -z "$REG" ] && {
-					clog 2 "[dcmd_parseArgs()]" Please provide an REGEX!
-					return 1
-				} ;;
+			(r) REG="$OPTARG";;
 			(u) USER=$OPTARG;;
 			(q) QUIET=true;;
 			(p) PORT=$OPTARG;;
@@ -158,37 +166,51 @@ dcopy_parseArgs(){
 ##
 dcopy_sendData(){
 	local source=""
+	local addargs=""
 
 	for ((j=0; j<${#SOURCE[*]}; j++)); do
 		# resetting loop internal data
-		ADDARGS=""
-		source=${SOURCE[j]}
+		addargs="-C"
+		source="${SOURCE[j]}"
 
 		if [ -d "$source" ]; then
-			ADDARGS=$ADDARGS" -r"
+			addargs+=" -r"
 		fi
 	
 		if [ "$QUIET" = "true" ]; then
-			ADDARGS=$ADDARGS" -q" # yeah, i know that i could have put the port, user and host  spec in here...
+			addargs+=" -q" 
 			if [ "$SIMUL" = true ]; then
 				for ((i=0; i<${#MAC[*]}; i++)); do
-					$CLIENT $ADDARGS -f -P $PORT "$source" ${USER}@${NAME[i]}:$DEST 
+					$CLIENT $addargs -f -P $PORT "$source" ${USER}@${NAME[i]}:$DEST || {
+						return 1
+					}
 				done
 			else
 				for ((i=0; i<${#MAC[*]}; i++)); do
-					$CLIENT $ADDARGS -P $PORT "$source" ${USER}@${NAME[i]}:$DEST 
+					$CLIENT $addargs -P $PORT "$source" ${USER}@${NAME[i]}:$DEST || {
+						return 1
+					}
 				done
 			fi 	
 		else
 			if [ "$SIMUL" = true ]; then
-				ADDARGS=$ADDARGS" -q"
+				addargs=$addargs" -q"
 				for ((i=0; i<${#MAC[*]}; i++)); do
-					$CLIENT $ADDARGS -f -P $PORT "$source" ${USER}@${NAME[i]}:$DEST 
+					clog 3 ${NAME[i]}-${IP[i]}: copy ${source} to ${DEST}
+					$CLIENT $addargs -f -P $PORT "$source" ${USER}@${NAME[i]}:$DEST || {
+						clog 1 "[dcopy_sendData()]" Failed! \
+							$CLIENT $addargs -f -P $PORT "$source" ${USER}@${NAME[i]}:$DEST 
+						return 1
+					}
 				done
 			else
 				for ((i=0; i<${#MAC[*]}; i++)); do
 					clog 3 ${NAME[i]}-${IP[i]}: copy ${source} to ${DEST}
-					$CLIENT $ADDARGS -P $PORT "$source" ${USER}@${NAME[i]}:$DEST 
+					$CLIENT $addargs -P $PORT "$source" ${USER}@${NAME[i]}:$DEST || {
+						clog 1 "[dcopy_sendData()]" Failed! \
+							$CLIENT $addargs -P $PORT "$source" ${USER}@${NAME[i]}:$DEST
+						return 1
+					}
 				done
 			fi 	
 		fi
@@ -196,14 +218,21 @@ dcopy_sendData(){
 }
 
 dcopy_debug(){
+	local addargs=""
+
 	echo G: $GROUP && echo R: $REG && echo U: $USER && echo Q: $QUIET
 	echo P: $PORT && echo S: $SIMUL && echo F: $MACHINES && echo Sr: ${SOURCE[*]}
 	echo Dest: $DEST
 
 	for ((j=0; j<${#SOURCE[*]}; j++)); do
+		echo 
 		echo FILE: ${SOURCE[j]}
 		for ((i=0; i<${#MAC[*]}; i++)); do
-			echo $CLIENT $ADDARGS -f -P $PORT "$source" ${USER}@${NAME[i]}:$DEST 
+			if [ -d "${SOURCE[j]}" ]; then
+				addargs=" -r"
+			fi
+			echo Command for Name: ${NAME[i]}
+			echo $CLIENT $addargs -f -P $PORT "${SOURCE[j]}" ${USER}@${NAME[i]}:$DEST 
 			echo ${MAC[i]} " " ${IP[i]} " " ${NAME[i]}
 		done
 	done
@@ -213,8 +242,17 @@ dcopy_debug(){
 
 
 main(){
+	dcopy_loadLibs || {
+		clog 1 "[main()]" Could load libraries!
+		return 1
+	}	
 
-	dcopy_parseArgs || {
+	dcopy_initAgent || {
+		clog 1 "[main()]" Could not initialize ssh agent!
+		return 1
+	}
+
+	dcopy_parseArgs $@ || {
 		clog 1 "[main()]" Could not parse options!
 		return 1
 	}
@@ -224,14 +262,8 @@ main(){
 		return 1
 	}
 
-	dcopy_initAgent || {
-		clog 1 "[main()]" Could not initialize ssh agent!
-		return 1
-	}
-
 	if [ $DEBUG = "true" ]; then
 		dcopy_debug
-		return 0
 	else 	
 		dcopy_sendData || {
 			clog 1 "[main()]" Could not send Data!
@@ -242,4 +274,4 @@ main(){
 	return 0	
 }
 
-main && exit 0 || exit 1
+main $@ && exit 0 || exit 1

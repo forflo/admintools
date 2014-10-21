@@ -15,6 +15,8 @@
 
 OPTSTRING="g:r:u:qsp:f:o:dm:"
 USER=$(whoami)
+GROUP=
+REG=
 QUIET=false
 SIMUL=false
 MACHINES=../machines.list
@@ -27,7 +29,7 @@ CLIENT=ssh
 ADDARGS="-C"
 
 dcmd_loadLibs(){
-	if type clog > /dev/null; then
+	if type clog > /dev/null 2>&1; then
 		echo "[dcmd_loadLibs()]" Logging function exists in your environment
 		echo "	" will choose that one
 		[ ! -x $BASH_LIB/aa_term_colors.sh ] && {
@@ -36,12 +38,12 @@ dcmd_loadLibs(){
 		}
 	elif [ -x $BASH_LIB/aa_term_colors.sh -a -x $BASH_LIB/logger.sh ]; then
 		. $BASH_LIB/aa_term_colors.sh || {
-			echo "[dcmd_loadlibs()]" Could not properly source aa_term_colors.sh
+			echo "[dcmd_loadLibs()]" Could not properly source aa_term_colors.sh
 			return 1
 		}
 
 		. $BASH_LIB/logger.sh || {
-			echo "[dcmd_loadlibs()]" Could not properly source logger.sh
+			echo "[dcmd_loadLibs()]" Could not properly source logger.sh
 			return 1
 		}
 	else
@@ -58,20 +60,18 @@ dcmd_loadLibs(){
 
 dcmd_init(){
 	local temp=()
+	local dir=0
 
 	if [ -n "$REG" ]; then
 		mapfile temp < <(grep -E "$REG" $MACHINES)
 	elif [ -n "$GROUP" ]; then
 		mapfile temp < <(grep -E "$GROUP" $MACHINES)
 	elif [ -n "$DIRECT" ]; then
-		local oldifs="$IFS"
-		IFS=","
-		set $DIRECT
-		for ((i=0;i<$#;i++)); do
-			temp[i]=${!i}
+		for i in $(echo "$DIRECT" | tr "," " "); do
+			echo ${i}
+			temp[$dir]=${i}
+			((dir++))
 		done
-		IFS="$oldifs"
-		set --
 	else
 		mapfile temp < <(grep '^[^#]' $MACHINES)
 	fi
@@ -91,7 +91,7 @@ dcmd_init(){
 }
 
 help(){
-	cat <<EOF
+	clog 2 <<EOF
 $0 	[ -g <group> | -r <regex> | -m <regex> ] 
     [ -u <user> ] 
     [ -f <machinefile> ]
@@ -137,11 +137,7 @@ dcmd_parseArgs(){
 	while getopts $OPTSTRING current; do
 		case $current in
 			(g) GROUP="$OPTARG";;
-			(r) REG="$OPTARG"
-				[ -z "$REG" ] && {
-					clog 2 "[dcmd_parseArgs()]" Please provide an REGEX!
-					return 1
-				} ;;
+			(r) REG="$OPTARG";;
 			(u) USER="$OPTARG";;
 			(q) QUIET=true;;
 			(p) PORT=$OPTARG;;
@@ -161,8 +157,9 @@ dcmd_parseArgs(){
 						return 1
 					}
 				} ;;
-			(d) DRY="true";;
+			(d) DEBUG="true";;
 			(m) DIRECT="$OPTARG";;
+
 			(*) clog 1 "[dcmd_parseArgs()]" Invalid option flag
 				return 1;;
 		esac
@@ -218,15 +215,8 @@ dcmd_sendCmd(){
 dcmd_debug(){
 	echo G: $GROUP && echo R: $REG && echo U: $USER && echo Q: $QUIET
 	echo P: $PORT && echo S: $SIMUL && echo F: $MACHINES 
-	echo Dest: $DEST
-
-	for ((j=0; j<${#SOURCE[*]}; j++)); do
-		echo FILE: ${SOURCE[j]}
-		for ((i=0; i<${#MAC[*]}; i++)); do
-			echo ${MAC[i]} " " ${IP[i]} " " ${NAME[i]}
-			echo $CLIENT $ADDARGS -p $PORT ${USER}@${NAME[i]} "$COMMAND"
-		done
-	done
+	echo D: $DEBUG
+	echo Direct: $DIRECT
 
 	return 0
 }
@@ -242,7 +232,7 @@ main(){
 		return 1
 	}
 
-	dcmd_parseArgs || {
+	dcmd_parseArgs $@ || {
 		clog 1 "[main()]" Could not parse Arguments!
 		return 1
 	}
@@ -265,4 +255,4 @@ main(){
 	return 0
 }
 
-main && exit 0 || exit 1
+main $@ && exit 0 || exit 1

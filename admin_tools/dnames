@@ -5,54 +5,115 @@
 #		auf den angegebenen Regex matchen, zeilenweise aus.
 ##
 
-. $BASH_LIB/aa_term_colors.sh
-
-OPTSTR="f:r:"
+OPTSTR="f:r:c"
+CSV="false"
 REGEX="NTB008[Aa]"
-PC_FILE="../machines.list"
+MACHINES="../machines.list"
 
-usage(){
-	cat << EOF
-$0 [ -r <regex> ] [ -f <alternative machine file> ]
+help(){
+	clog 2 << EOF
+$0 [ -r <regex> ] [ -f <alternative machine file> ] [ -c ]
+	-c := Print out a comma separated list of values
 EOF
+
+	return 
 }
 
-if [[ "$1" = @(--[hH][Ee][lL][pP]|-[hH]) || "$#" = 0 ]]; then
-	log_prompt(){
-		echo -n ""
-	}
-	usage | clog 2
-	exit 0
-fi
+dnames_loadLibs(){
+	if type clog > /dev/null 2>&1; then
+		echo "[dnames_loadLibs()]" Logging function exists in your environment
+		echo "	" will choose that one
+		[ ! -x $BASH_LIB/aa_term_colors.sh ] && {
+			echo "[dnames_loadLibs()]" "Missing file for term colors!"
+			return 1
+		}
+	elif [ -x $BASH_LIB/aa_term_colors.sh -a -x $BASH_LIB/logger.sh ]; then
+		. $BASH_LIB/aa_term_colors.sh || {
+			echo "[dnames_loadLibs()]" Could not properly source aa_term_colors.sh
+			return 1
+		}
 
-while getopts $OPTSTR input; do
-	case $input in
-		(f) PC_FILE=$OPTARG
-			;;
-		(r) REGEX=$OPTARG
-			;;
-		(*)
-			;;
-	esac
-done
+		. $BASH_LIB/logger.sh || {
+			echo "[dnames_loadLibs()]" Could not properly source logger.sh
+			return 1
+		}
+	else
+		echo "[dnames_loadLibs()]" Creating dummy logging function 
+		function clog(){
+			shift
+			echo "$@"
+			return 0
+		}
+	fi
+
+	return 0
+}
+
+dnames_parseArgs(){
+	if [ "$#" = "0" -o "$1" = "--help" -o "$1" = "-h" ]; then
+		help
+		return 1
+	fi
+
+	while getopts $OPTSTR input; do
+		case $input in
+			(f) MACHINES="$OPTARG"
+				[ ! -f "$MACHINES" ] && {
+					clog 1 "[dnames_parseArgs()]" "Invalid filename for machines file!"
+					return 1
+				} ;;
+			(r) REGEX=$OPTARG ;;
+			(c) CSV="true" ;;
+			(*) help; return 1 ;;
+		esac
+	done
+
+	return 0
+}
+
+dnames_printNames(){
+	local temp=()
+
+	mapfile temp < <(grep "$REGEX" "$MACHINES")
+
+	for ((i=0; i<${#temp[*]}; i++)); do
+		set ${temp[i]}
+		if [ "$CSV" = "false" ]; then
+			echo $1
+		else 
+			if [ $i -eq $((${#temp[*]}-1)) ]; then
+				echo -n $1
+			else 
+				echo -n $1","
+			fi
+		fi
+	done
+
+	return 0
+}
 
 
 ##
 # Fills the Array "NAME"
 # with fitting values
 ##
-init(){
-	if [ -n "$REGEX" ]; then
-		mapfile TEMP < <(grep "$REGEX" "$PC_FILE")
-	fi
+main(){
+	dnames_loadLibs || {
+		clog 1 "[main()]" Could not load Libraries!
+		return 1
+	}
 
-	for ((i=0; i<${#TEMP[*]}; i++)); do
-		set ${TEMP[i]}
-		echo $1
-		set --
-	done
-	unset TEMP
+	dnames_parseArgs $@ || {
+		clog 1 "[main()]" Could not parse options!
+		return 1
+	}
+
+	dnames_printNames || { 
+		clog 1 "[main()]" "Could not print names!"
+		return 1
+	}
+
+	return 1
 }
 
-init
-
+main $@ && exit 0 || exit 1
