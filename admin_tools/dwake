@@ -9,7 +9,6 @@
 #	[ --simultaneous ]
 #	<command>
 #
-. $BASH_LIB/aa_term_colors.sh
 
 OPTSTRING="g:r:qf:w:m:"
 REG="NTB008[Aa]"
@@ -19,11 +18,10 @@ SIMUL=false
 MACHINES=../machines.list
 WAIT="0.2"
 
-
 PROG=wakeonlan
 
 help(){
-	cat <<EOF
+	clog 2 <<EOF
 $0 	[ -g <group> | -r <regex>  | -m <machines list (csv)> ]
 		[ -f <machinefile> ]
 		[ -q ] 
@@ -35,51 +33,86 @@ $0 	[ -g <group> | -r <regex>  | -m <machines list (csv)> ]
 	q := silent output if set
 	w := the time between the single magic pakets
 EOF
+
+	return 0
 }
 
-if [[ "$1" = @(--[hH][Ee][lL][pP]|-[hH]) ]]; then
-	log_prompt(){
-		echo -n ""
-	}
-	help | clog 2
-	exit 0
-fi
+dwake_loadLibs(){
+	if type clog > /dev/null 2>&1; then
+		echo "[dwake_loadLibs()]" Logging function exists in your environment
+		echo "	" will choose that one
+		[ ! -x $BASH_LIB/aa_term_colors.sh ] && {
+			echo "[dwake_loadLibs()]" "Missing file for term colors!"
+			return 1
+		}
+	elif [ -x $BASH_LIB/aa_term_colors.sh -a -x $BASH_LIB/logger.sh ]; then
+		. $BASH_LIB/aa_term_colors.sh || {
+			echo "[dwake_loadLibs()]" Could not properly source aa_term_colors.sh
+			return 1
+		}
 
-while getopts $OPTSTRING current; do
-	case $current in
-		(g) GROUP=$OPTARG;;
-		(r) REG="$OPTARG";;
-		(q) QUIET=true;;
-		(f) MACHINES="$OPTARG";;
-		(w) WAIT="$OPTARG";;
-		(m) DIRECT="$OPTARG" ;;
-	esac
-done
+		. $BASH_LIB/logger.sh || {
+			echo "[dwake_loadLibs()]" Could not properly source logger.sh
+			return 1
+		}
+	else
+		echo "[dwake_loadLibs()]" Creating dummy logging function 
+		function clog(){
+			shift
+			echo "$@"
+			return 0
+		}
+	fi
+
+	return 0
+}
+
+dwake_parseArgs(){
+	if [ "$#" = "0" -o "$1" = "--help" -o "$1" = "-h" ]; then
+		help
+		return 1
+	fi
+
+	while getopts $OPTSTRING current; do
+		case $current in
+			(g) GROUP=$OPTARG;;
+			(r) REG="$OPTARG";;
+			(q) QUIET=true;;
+			(f) MACHINES="$OPTARG";;
+			(w) WAIT="$OPTARG";;
+			(m) DIRECT="$OPTARG" ;;
+			(*) help
+				return 1;;
+		esac
+	done
+
+	return 0
+}
 
 ##
 # Fills the Arrays "MAC", "IP" and "NAME"
 # with fitting values
 ##
-init(){
+dwake_init(){
+	local temp=()
+	local dir=0
+
 	if [ -n "$REG" ]; then
-		mapfile TEMP < <(grep "$REG" $MACHINES)
+		mapfile temp < <(grep -E "$REG" $MACHINES)
 	elif [ -n "$GROUP" ]; then
-		mapfile TEMP < <(grep "$GROUP" $MACHINES)
-	elif [ -n "DIRECT" ]; then
-		local oldifs="$IFS"
-		IFS=","
-		set $DIRECT
-		for ((i=0;i<$#;i++)); do
-			TEMP[i]=${!i}
+		mapfile temp < <(grep -E "$GROUP" $MACHINES)
+	elif [ -n "$DIRECT" ]; then
+		for i in $(echo "$DIRECT" | tr "," " "); do
+			echo ${i}
+			temp[$dir]=${i}
+			((dir++))
 		done
-		IFS="$oldifs"
-		set --
 	else
-		mapfile TEMP < <(grep '^[^#]' $MACHINES)
+		mapfile temp < <(grep '^[^#]' $MACHINES)
 	fi
 
-	for ((i=0; i<${#TEMP[*]}; i++)); do
-		set ${TEMP[i]}
+	for ((i=0; i<${#temp[*]}; i++)); do
+		set ${temp[i]}
 		NAME[i]=$1
 		MAC[i]=$2
 		if [ -z "$3" ]; then
@@ -88,24 +121,33 @@ init(){
 			IP[i]=$3
 		fi
 	done
-	unset TEMP
+
+	return 0
 }
 
 ##
 # Sends the specified command to the initialized hosts
 ##
-wakeup(){
+dwake_wakeup(){
 	if [ "$QUIET" = "true" ]; then
 		for ((i=0; i<${#MAC[*]}; i++)); do
 			sleep $WAIT
-			$PROG ${MAC[i]} > /dev/null
+			$PROG ${MAC[i]} > /dev/null || {
+				return 1
+			}
 		done
 	else
 		for ((i=0; i<${#MAC[*]}; i++)); do
 			sleep $WAIT
 			$PROG ${MAC[i]} | flog 2 bold
+			((${PIPESTATUS[0]})) && {
+				clog 1 "[dwake_wakeup()]" Execution of $PROG failed!
+				return 1
+			}
 		done
 	fi
+
+	return 0
 }
 
 ##
@@ -128,3 +170,18 @@ init
 #print_opts
 #print_arrays
 wakeup
+
+main(){
+	dwake_loadLibs || {
+		clog 1 "[main()]" Could not load libraries
+		return 1
+	}
+
+	##
+	# TODO
+	##
+
+	return 0
+}
+
+main $@ && exit 0 || exit 1
