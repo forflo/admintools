@@ -1,24 +1,27 @@
 #!/bin/bash
-#donline - A script for checking whether a cluster is online
+# donline - A script for checking whether a cluster is online
 ##
 
 ##
-#Depends on basem, bashm and aa_term_colors.sh
+# Depends on basem, bashm 
+# (see. github.org/forflo/{basem,bashm})
 ##
-. $BASH_LIB/aa_term_colors.sh
 
-#CNT: pingcount - TMT: Timeout - FMT: Format - PB: PID Buffer
+# CNT: pingcount - TMT: Timeout - FMT: Format - PB: PID Buffer
 CNT=1
 TMT=1
+PB=""
 FMT=human
-PB=
 
-BASHM=12345 #Sys-V keys for IPC-Resources. Could be randomized
+MACHINES=$REPO/data/machines.list
+
+# Sys-V keys for IPC-Resources. Could be randomized
+BASHM=12345 
 BASEM=12345
 OPTSTR="f:r:t:c:d:"
 REG="NTB008[Aa]"
 
-printhelp(){
+help(){
 	clog 2 << EOF
 usage: $0 [-r <regex> ] 
     [ -t <timeout> ] 
@@ -46,101 +49,207 @@ EOF
 	exit 0
 }
 
-error(){
-	clog 1 Sie haben einen falschen Formatcode angegeben!
-	exit 1
+donline_loadLibs(){
+	if type clog > /dev/null 2>&1; then
+		echo "[donline_loadLibs()]" Logging function exists in your environment
+		echo "	" will choose that one
+		[ ! -x $BASH_LIB/aa_term_colors.sh ] && {
+			echo "[donline_loadLibs()]" "Missing file for term colors!"
+			return 1
+		}
+	elif [ -x $BASH_LIB/aa_term_colors.sh -a -x $BASH_LIB/logger.sh ]; then
+		. $BASH_LIB/aa_term_colors.sh || {
+			echo "[donline_loadLibs()]" Could not properly source aa_term_colors.sh
+			return 1
+		}
+
+		. $BASH_LIB/logger.sh || {
+			echo "[donline_loadLibs()]" Could not properly source logger.sh
+			return 1
+		}
+	else
+		echo "[donline_loadLibs()]" Creating dummy logging function 
+		function clog(){
+			shift
+			echo "$@"
+			return 0
+		}
+	fi
+
+	return 0
 }
 
-if [ $# -eq 0 ]; then
-	printhelp
-fi
+donline_parseArgs(){
+	if [ "$#" = "0" -o "$1" = "--help" -o "$1" = "-h" ]; then
+		help
+		return 1
+	fi
 
-#parses the commandline
-while getopts ${OPTSTR} input; do
-	case $input in
-		(r) REG="$OPTARG" ;;
-		(t) TMT="$OPTARG" ;;
-		(c) CNT="$OPTARG" ;;
-		(f) FMT="$OPTARG"
-			case $FMT in 
-				(csv) ;; 
-				(human) ;; 
-				(num) ;; 
-				(list) ;; 
-				(delim) ;; 
-				(*) error ;;  
-			esac 
-			;;
-		(d) DELIM="$OPTARG" ;;
+	while getopts ${OPTSTR} input; do
+		case $input in
+			(r) REG="$OPTARG" ;;
+			(t) TMT="$OPTARG" ;;
+			(c) CNT="$OPTARG" ;;
+			(f) FMT="$OPTARG"
+				case $FMT in 
+					(csv) ;; 
+					(human) ;; 
+					(num) ;; 
+					(list) ;; 
+					(delim) ;; 
+					(*) help
+						clog 1 "[donline_parseArgs()]" Invalid format!
+						return 1;;  
+				esac 
+				;;
+			(d) DELIM="$OPTARG" ;;
+			(*) help; return 1;;
+		esac
+	done
+
+	return 0
+}
+
+donline_init(){
+	local temp=()
+	local dir=0
+
+	if [ -n "$REG" ]; then
+		mapfile temp < <(grep -E "$REG" $MACHINES)
+	elif [ -n "$GROUP" ]; then
+		mapfile temp < <(grep -E "$GROUP" $MACHINES)
+	elif [ -n "$DIRECT" ]; then
+		for i in $(echo "$DIRECT" | tr "," " "); do
+			echo ${i}
+			temp[$dir]=${i}
+			((dir++))
+		done
+	else
+		mapfile temp < <(grep '^[^#]' $MACHINES)
+	fi
+
+	for ((i=0; i<${#temp[*]}; i++)); do
+		set ${temp[i]}
+		NAME[i]=$1
+		MAC[i]=$2
+		if [ -z "$3" ]; then
+			IP[i]="none" # TODO resolve hostname!
+		else
+			IP[i]=$3
+		fi
+	done
+
+	return 0
+}
+
+donline_getOnline(){
+	##
+	# creates a semaphor
+	# creates a shared memory segment with length 10000 bytes
+	basem --key $BASEM -c -i 1 || {
+		clog 1 "[donline_getOnline()]" Creation of semaphore failed!
+		return 1
+	}
+	
+	bashm --key $BASHM -c -l 10000 -p 660 || {
+		clog 1 "[donline_getOnline()]" Creation of shared memory segment failed!
+		return 1
+	}
+
+	##	
+	# Starts one bash process for every computername in NAMES
+	for ((i=0; i<${#NAME[*]}; i++)); do
+		if ping -W $TMT -c $CNT ${NAME[i]} > /dev/null 2>&1; then
+			case $FMT in
+				(csv) 
+					##
+					# enter critical stage
+					basem -k $BASEM -p
+					##
+					# appends the computername to the shm segment
+					bashm -k $BASHM -s "$(bashm -k $BASHM -g),${NAME[i]}"
+					##
+					# leave critical stage
+					basem -k $BASEM -v 
+					;;
+				(human) 
+					clog 2 Der Rechner ${NAME[i]} ist online!  
+					;;
+				(num) 
+					basem -k $BASEM -p
+					bashm -k $BASHM -s $(($(bashm -k $BASHM -g) + 1)) 
+					basem -k $BASEM -v 
+					;;
+				(list) 
+					echo ${NAME[i]} 
+					;;
+				(delim) 
+					basem -k $BASEM -p
+					bashm -k $BASHM -s "$(bashm -k $BASHM -g)${DELIM}${NAME[i]}"
+					basem -k $BASEM -v
+					;;
+			esac
+		else
+			case $FMT in
+				(human) clog 1 Der Rechner ${NAME[i]} ist nicht online!  ;;
+			esac
+		fi &
+
+		##
+		# builds the waitbuffer PB
+		PB=$PB" "$!
+	done
+	##
+	# waits for the termination of all child processes
+	wait $PB
+
+	##
+	# prints results
+	case $FMT in
+		(csv) bashm -k $BASHM -g ;;
+		(num) bashm -k $BASHM -g ; echo "";;
+		(delim) bashm -k $BASHM -g ;;
 		(*) ;;
 	esac
-done
+	
+	##
+	# destroys the shared memory segment and the semaphor
+	# check whether we are running connected to a terminal or not
+	basem --key $BASEM -d || {
+		clog 1 "[donline_getOnline()]" Could not destroy semaphor!
+		return 1
+	}
 
-#
-#Vielleicht besser:
-#mapfile NAMES < <(dnames -r "$REG")
-#
-FILE=$REPO/data/machines.list
-mapfile NAMES < <(grep "${REG}" "${FILE}" | cut -d " " -f 1 -)
+	bashm --key $BASHM -d || {
+		clog 1 "[donline_getOnline()]" Could not destory shared memory segment!
+		return 1
+	}
 
-#creates a semaphor
-#creates a shared memory segment with length 10000 bytes
-basem --key $BASEM -c -i 1 && \
-	bashm --key $BASHM -c -l 10000 -p 660 && \
-	[ -t 1 ] && \
-	clog 2 Shm Segment und Semaphor erstellt!
+	return 0
+}
 
-#Starts one bash process for every computername in NAMES
-for ((i=0; i<${#NAMES[*]}; i++)); do
-	if ping -W $TMT -c $CNT ${NAMES[i]} > /dev/null 2>&1; then
-		case $FMT in
-			(csv) 
-				#enter critical stage
-				basem -k $BASEM -p
-				#appends the computername to the shm segment
-				bashm -k $BASHM -s "$(bashm -k $BASHM -g),${NAMES[i]}"
-				#leave critical stage
-				basem -k $BASEM -v 
-				;;
-			(human) 
-				clog 2 Der Rechner ${NAMES[i]} ist online!  
-				;;
-			(num) 
-				basem -k $BASEM -p
-				bashm -k $BASHM -s $(($(bashm -k $BASHM -g) + 1)) 
-				basem -k $BASEM -v 
-				;;
-			(list) 
-				echo ${NAMES[i]} 
-				;;
-			(delim) 
-				basem -k $BASEM -p
-				bashm -k $BASHM -s "$(bashm -k $BASHM -g)${DELIM}${NAMES[i]}"
-				basem -k $BASEM -v
-				;;
-		esac
-	else
-		case $FMT in
-			(human) clog 1 Der Rechner ${NAMES[i]} ist nicht online!  ;;
-		esac
-	fi &
-	#build the waitbuffer PB
-	PB=$PB" "$!
-done
-#waits for the termination of all child processes
-wait $PB
+main(){
+	donline_loadLibs || {
+		clog "[main()]" Could not load libraries!
+		return 1
+	}
 
-#print results
-case $FMT in
-	(csv) bashm -k $BASHM -g ;;
-	(num) bashm -k $BASHM -g ; echo "";;
-	(delim) bashm -k $BASHM -g ;;
-	(*) ;;
-esac
+	donline_init || {
+		clog "[main()]" Could not initialize main!
+		return 1
+	}
 
-#destroys the shared memory segment and the semaphor
-#check whether we are running connected to a terminal or not
-basem --key $BASEM -d && \
-	bashm --key $BASHM -d && \
-	[ -t 1 ] &&  \
-	clog 2 Shm Segment und Semaphor gelöscht!
+	donline_parseArgs $@ || {
+		clog "[main()]" Could not parse cli options!
+		return 1
+	}
+
+	donline_getOnline || {
+		clog "[main()]" Execution of donline_getOnline failed!
+		return 1
+	}
+
+	return 0
+}
+
+main $@ && exit 0 || exit 1
