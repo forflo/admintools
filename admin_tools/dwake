@@ -8,16 +8,16 @@
 #	[ -p <portnumber> ] 
 #	[ --simultaneous ]
 #	<command>
-#
+##
 
-OPTSTRING="g:r:qf:w:m:"
+OPTSTRING="g:r:qf:w:m:d"
 REG="NTB008[Aa]"
+GROUP=""
 DIRECT=""
+DEBUG=false
 QUIET=false
-SIMUL=false
 MACHINES=../machines.list
 WAIT="0.2"
-
 PROG=wakeonlan
 
 help(){
@@ -26,10 +26,12 @@ $0 	[ -g <group> | -r <regex>  | -m <machines list (csv)> ]
 		[ -f <machinefile> ]
 		[ -q ] 
 		[ -w <time to wait> ] 
+		[ -d <dry mode: debug> ]
 
 	<group> := defines the group of computers to send commands to
 	<regex> := regex for computernames or ip addresses to match
 	<machinefile> := the file to read machine names and mac addersses from
+
 	q := silent output if set
 	w := the time between the single magic pakets
 EOF
@@ -41,6 +43,7 @@ dwake_loadLibs(){
 	if type clog > /dev/null 2>&1; then
 		echo "[dwake_loadLibs()]" Logging function exists in your environment
 		echo "	" will choose that one
+
 		[ ! -x $BASH_LIB/aa_term_colors.sh ] && {
 			echo "[dwake_loadLibs()]" "Missing file for term colors!"
 			return 1
@@ -58,6 +61,10 @@ dwake_loadLibs(){
 	else
 		echo "[dwake_loadLibs()]" Creating dummy logging function 
 		function clog(){
+			if [ "$#" -eq "1" ]; then
+				cat
+				return 0
+			fi
 			shift
 			echo "$@"
 			return 0
@@ -78,9 +85,14 @@ dwake_parseArgs(){
 			(g) GROUP=$OPTARG;;
 			(r) REG="$OPTARG";;
 			(q) QUIET=true;;
-			(f) MACHINES="$OPTARG";;
+			(f) MACHINES="$OPTARG"
+				[ ! -f "$MACHINES" ] && {
+					clog 1 "[dcmd_parseArgs()]" "Invalid filename for machines file!"
+					return 1
+				} ;;
 			(w) WAIT="$OPTARG";;
 			(m) DIRECT="$OPTARG" ;;
+			(d) DEBUG="true";;
 			(*) help
 				return 1;;
 		esac
@@ -116,7 +128,7 @@ dwake_init(){
 		NAME[i]=$1
 		MAC[i]=$2
 		if [ -z "$3" ]; then
-			IP[i]="none" # TODO resolve hostname!
+			IP[i]="none"
 		else
 			IP[i]=$3
 		fi
@@ -150,26 +162,19 @@ dwake_wakeup(){
 	return 0
 }
 
-##
-# For debugging use
-##
-print_opts(){
-	echo $GROUP
-	echo $REG
-	echo $QUIET
-	echo $MACHINES
+dwake_debug(){
+	echo REG:     $REG
+	echo GROUP    $GROUP
+	echo DIRECT   $DIRECT
+	echo DEBUG    $DEBUG
+	echo QUIET    $QUIET
+	echo SIMUL    $SIMUL
+	echo MACHINES $MACHINES
+	echo WAIT     $WAIT
+	echo PROG     $PROG
+	
+	return 0
 }
-
-print_arrays(){
-	for ((i=0; i<${#MAC[*]}; i++)); do
-		echo ${MAC[i]} " " ${IP[i]} " " ${NAME[i]}
-	done
-}
-
-init
-#print_opts
-#print_arrays
-wakeup
 
 main(){
 	dwake_loadLibs || {
@@ -177,9 +182,26 @@ main(){
 		return 1
 	}
 
-	##
-	# TODO
-	##
+	dwake_parseArgs $@ || {
+		clog 1 "[main()]" Could not parse the script\'s arguments!
+		return 1
+	}
+
+	dwake_init || {
+		clog 1 "[main()]" Could not initialize dwake!
+		return 1
+	}
+	
+	if [ "$DEBUG" = "true" ]; then
+		dwake_debug
+		return 0
+	else
+		dwake_wakeup || {
+			clog 1 "[main()]" Could not execute wakeup routine!
+			return 1
+		}	
+
+	fi
 
 	return 0
 }
