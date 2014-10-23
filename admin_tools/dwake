@@ -16,7 +16,7 @@ GROUP=""
 DIRECT=""
 DEBUG=false
 QUIET=false
-MACHINES=../machines.list
+MACHINES=$REPOS_PATH/git/admintools/machines.list
 WAIT="0.2"
 PROG=wakeonlan
 
@@ -47,7 +47,7 @@ dwake_loadLibs(){
 		[ ! -x $BASH_LIB/aa_term_colors.sh ] && {
 			echo "[dwake_loadLibs()]" "Missing file for term colors!"
 			return 1
-		}
+		} || . $BASH_LIB/aa_term_colors.sh
 	elif [ -x $BASH_LIB/aa_term_colors.sh -a -x $BASH_LIB/logger.sh ]; then
 		. $BASH_LIB/aa_term_colors.sh || {
 			echo "[dwake_loadLibs()]" Could not properly source aa_term_colors.sh

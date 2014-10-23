@@ -6,7 +6,7 @@
 
 # General global variables
 OPTSTRING="g:r:u:qsp:f:dc:"
-MACHINES=../machines.list
+MACHINES=$REPOS_PATH/git/admintools/machines.list
 SIMUL=false
 DEBUG=false
 QUIET=false
@@ -53,7 +53,7 @@ dcopy_loadLibs(){
 		[ ! -x $BASH_LIB/aa_term_colors.sh ] && {
 			echo "[dcopy_loadLibs()]" "Missing file for term colors!"
 			return 1
-		}
+		} || . $BASH_LIB/aa_term_colors.sh
 	elif [ -x $BASH_LIB/aa_term_colors.sh -a -x $BASH_LIB/logger.sh ]; then
 		. $BASH_LIB/aa_term_colors.sh || {
 			echo "[dcopy_loadLibs()]" Could not properly source aa_term_colors.sh
