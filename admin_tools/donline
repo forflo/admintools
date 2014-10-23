@@ -12,8 +12,7 @@ CNT=1
 TMT=1
 PB=""
 FMT=human
-
-MACHINES=$REPO/data/machines.list
+MACHINES=../machines.list
 
 # Sys-V keys for IPC-Resources. Could be randomized
 BASHM=12345 
@@ -46,7 +45,8 @@ usage: $0 [-r <regex> ]
 	Timeout (in sec): 1
 	Delimiter: ","
 EOF
-	exit 0
+
+	return 0
 }
 
 donline_loadLibs(){
@@ -70,6 +70,10 @@ donline_loadLibs(){
 	else
 		echo "[donline_loadLibs()]" Creating dummy logging function 
 		function clog(){
+			if [ "$#" -eq "1" ]; then
+				cat
+				return 0
+			fi
 			shift
 			echo "$@"
 			return 0

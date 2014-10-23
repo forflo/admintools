@@ -38,8 +38,11 @@ dnames_loadLibs(){
 			return 1
 		}
 	else
-		echo "[dnames_loadLibs()]" Creating dummy logging function 
 		function clog(){
+			if [ "$#" -eq "1" ]; then
+				cat
+				return 0
+			fi
 			shift
 			echo "$@"
 			return 0

@@ -1,16 +1,10 @@
 #!/bin/bash
-#----->dcopy<------
-#Autor: Florian Mayer
-#Datum: 7.Sept.2013
 #
-#$0 	[-g <group> | --nreg <regex> | --ipreg <regex>] 
-#	[ -u <user> ] 
-#	[ -s ] 
-#	[ -p <portnumber> ] 
-#	[ --simultaneous ]
-#	<command>
-#
+# Autor: Florian Mayer
+# Datum: 7.Sept.2013
+##
 
+# General global variables
 OPTSTRING="g:r:u:qsp:f:dc:"
 MACHINES=../machines.list
 SIMUL=false
@@ -24,7 +18,7 @@ CLIENT=scp
 
 help(){
 	clog 2 <<EOF
-$0 	[ -g <group> | -r <regex> | -m <regex> ] 
+$0 	[ -g <group> | -r <regex> ]
 		[ -u <user> ] 
 		[ -f <machinefile> | -c <csv-String> ]
 		[ -q ] 
@@ -32,7 +26,6 @@ $0 	[ -g <group> | -r <regex> | -m <regex> ]
 		[ -s ]
 		[ -d ]
 		<source file/dir> <destination file/dir>
-		
 
 	<group> := defines the group of computers to send commands to
 	<regex> := regex for computernames or ip addresses to match
@@ -74,6 +67,10 @@ dcopy_loadLibs(){
 	else
 		echo "[dcopy_loadLibs()]" Creating dummy logging function 
 		function clog(){
+			if [ "$#" -eq "1" ]; then
+				cat
+				return 0
+			fi
 			shift
 			echo "$@"
 			return 0
@@ -92,7 +89,6 @@ dcopy_init(){
 		mapfile temp < <(grep -E "$GROUP" $MACHINES)
 	elif [ -n "DIRECT" ]; then
 		for i in $(echo "$DIRECT" | tr "," " "); do
-			echo ${i}
 			temp[$dir]=${i}
 			((dir++))
 		done

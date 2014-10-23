@@ -11,7 +11,7 @@
 ##
 
 OPTSTRING="g:r:qf:w:m:d"
-REG="NTB008[Aa]"
+REG=""
 GROUP=""
 DIRECT=""
 DEBUG=false
@@ -107,6 +107,7 @@ dwake_parseArgs(){
 ##
 dwake_init(){
 	local temp=()
+	local temp2=()
 	local dir=0
 
 	if [ -n "$REG" ]; then
@@ -115,11 +116,13 @@ dwake_init(){
 		mapfile temp < <(grep -E "$GROUP" $MACHINES)
 	elif [ -n "$DIRECT" ]; then
 		for i in $(echo "$DIRECT" | tr "," " "); do
-			echo ${i}
-			temp[$dir]=${i}
+			temp2[$dir]=${i}
+			temp[$dir]=$(grep -E "${temp2[$dir]}" "$MACHINES")
 			((dir++))
 		done
 	else
+		##
+		# All computers in $MACHINES
 		mapfile temp < <(grep '^[^#]' $MACHINES)
 	fi
 
