@@ -13,37 +13,37 @@ TMT=1
 PB=""
 FMT=human
 MACHINES=$REPOS_PATH/git/admintools/machines.list
-
 # Sys-V keys for IPC-Resources. Could be randomized
 BASHM=12345 
 BASEM=12345
 OPTSTR="f:r:t:c:d:"
 REG="NTB008[Aa]"
 
-help(){
-	clog 2 << EOF
+donline_help(){
+	clog 2 <<EOF
 usage: $0 [-r <regex> ] 
     [ -t <timeout> ] 
     [ -c <count> ] 
     [ -f <formatcode>  -d <delimiter> ]
 
-    <regex> := Regex the computernames have to match
-    <timeout> := The timeout value for the ping program in seconds
-    <count> := The number of tries ping should use
+	<regex> := Regex the computernames have to match
+	<timeout> := The timeout value for the ping program in seconds
+	<count> := The number of tries ping should use
 	<delimiter> := The delimiter for formatcode
 	<formatcode> := The outputformat. Allowed values are
-      human => normal behaviour. Human readable with fancy colouring...
-      csv => comma separated value string. 
-      list => Between every entry newline is used as delimiter
-      delim => Separator of -d is used
-      num => only the number of online machines is printed
-      In csv, list and delim only the computernames of online machines is displayed!
+	  human => normal behaviour. Human readable with fancy coloring...
+	  csv => comma separated value string. 
+	  list => Between every entry newline is used as delimiter
+	  delim => Separator of -d is used
+	  num => only the number of online machines is printed
+	  In csv, list and delim only the computernames of online machines is displayed!
 
-	Standards:
-	Format: human
-	Counts of pings: 1
-	Timeout (in sec): 1
-	Delimiter: ","
+	  Standards
+	  ---------
+	  Format: human
+	  Counts of pings: 1
+	  Timeout (in sec): 1
+	  Delimiter: ","
 EOF
 
 	return 0
@@ -51,8 +51,6 @@ EOF
 
 donline_loadLibs(){
 	if type clog > /dev/null 2>&1; then
-		echo "[donline_loadLibs()]" Logging function exists in your environment
-		echo "	" will choose that one
 		[ ! -x $BASH_LIB/aa_term_colors.sh ] && {
 			echo "[donline_loadLibs()]" "Missing file for term colors!"
 			return 1
@@ -68,7 +66,6 @@ donline_loadLibs(){
 			return 1
 		}
 	else
-		echo "[donline_loadLibs()]" Creating dummy logging function 
 		function clog(){
 			if [ "$#" -eq "1" ]; then
 				cat
@@ -85,7 +82,7 @@ donline_loadLibs(){
 
 donline_parseArgs(){
 	if [ "$#" = "0" -o "$1" = "--help" -o "$1" = "-h" ]; then
-		help
+		donline_help
 		return 1
 	fi
 
@@ -101,13 +98,13 @@ donline_parseArgs(){
 					(num) ;; 
 					(list) ;; 
 					(delim) ;; 
-					(*) help
+					(*) donline_help
 						clog 1 "[donline_parseArgs()]" Invalid format!
 						return 1;;  
 				esac 
 				;;
 			(d) DELIM="$OPTARG" ;;
-			(*) help; return 1;;
+			(*) donline_help; return 1;;
 		esac
 	done
 
@@ -238,13 +235,13 @@ main(){
 		return 1
 	}
 
-	donline_init || {
-		clog "[main()]" Could not initialize main!
+	donline_parseArgs $@ || {
+		clog "[main()]" Could not parse cli options!
 		return 1
 	}
 
-	donline_parseArgs $@ || {
-		clog "[main()]" Could not parse cli options!
+	donline_init || {
+		clog "[main()]" Could not initialize main!
 		return 1
 	}
 

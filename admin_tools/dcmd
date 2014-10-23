@@ -72,7 +72,6 @@ dcmd_init(){
 		mapfile temp < <(grep -E "$GROUP" $MACHINES)
 	elif [ -n "$DIRECT" ]; then
 		for i in $(echo "$DIRECT" | tr "," " "); do
-			echo ${i}
 			temp[$dir]=${i}
 			((dir++))
 		done
