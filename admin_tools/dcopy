@@ -5,7 +5,7 @@
 ##
 
 # General global variables
-OPTSTRING="g:r:u:qsp:f:dc:"
+OPTSTRING="g:r:u:qsp:f:dc:m:"
 MACHINES=$REPOS_PATH/git/admintools/machines.list
 SIMUL=false
 DEBUG=false
@@ -20,7 +20,7 @@ help(){
 	clog 2 <<EOF
 $0 	[ -g <group> | -r <regex> ]
 		[ -u <user> ] 
-		[ -f <machinefile> | -c <csv-String> ]
+		[ -f <machinefile> | -m <csv-String> ]
 		[ -q ] 
 		[ -p <portnumber> ] 
 		[ -s ]
@@ -130,6 +130,7 @@ dcopy_parseArgs(){
 	while getopts $OPTSTRING current; do
 		case $current in
 			(g) GROUP=$OPTARG;;
+			(m) DIRECT="$OPTARG";;
 			(r) REG="$OPTARG";;
 			(u) USER=$OPTARG;;
 			(q) QUIET=true;;
@@ -141,7 +142,6 @@ dcopy_parseArgs(){
 					return 1
 				} ;;
 			(d) DEBUG="true";;
-			(c) DIRECT="$OPTARG";;
 			(*) clog 1 "[dcmd_parseArgs()]" Invalid option flag
 				return 1;;
 		esac
