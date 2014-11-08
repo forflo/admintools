@@ -21,8 +21,6 @@ EOF
 
 dnames_loadLibs(){
 	if type clog > /dev/null 2>&1; then
-		echo "[dnames_loadLibs()]" Logging function exists in your environment
-		echo "	" will choose that one
 		[ ! -x $BASH_LIB/aa_term_colors.sh ] && {
 			echo "[dnames_loadLibs()]" "Missing file for term colors!"
 			return 1
