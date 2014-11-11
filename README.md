@@ -9,11 +9,11 @@ A useful set of shell scripts providing basic functionality for maintaining a cl
 
 Contains the base toolchain.
 
-* dcmd => distributed command execution
-* dcopy => distributed file copy
-* dnames => fetches names from the machine.list file
-* donline => fetches the names of available computers 
-* dwake => wakes up a number of specified computers using wakeonlan
+* dcmd: distributed command execution
+* dcopy: distributed file copy
+* dnames: fetches names from the machine.list file
+* donline: fetches the names of available computers 
+* dwake: wakes up a number of specified computers using wakeonlan
 
 ### admin_scripts
 
@@ -23,7 +23,7 @@ Contains scripts that use the base toolchain. These scripts are commented.
 
 Contains old scripts.
 
-### admin_scripts_cyg
+### admin\_scripts_cyg
 
 Contains scripts that use the base toolchain and only are meant to
 run on cygwin hosts.
@@ -41,5 +41,5 @@ as mentioned above.
 The tool donline depends on the tools basem and bashm. Both tools are
 available at the following URIs
 
-* basem https://github.com/forflo/basem
-* bashm https://github.com/forflo/bashm
+* basem: https://github.com/forflo/basem
+* bashm: https://github.com/forflo/bashm
