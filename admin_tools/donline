@@ -20,7 +20,7 @@ OPTSTR="f:r:t:c:d:"
 REG="NTB008[Aa]"
 
 donline_help(){
-	clog 2 <<EOF
+	clog 2 << EOF
 usage: $0 [-r <regex> ] 
     [ -t <timeout> ] 
     [ -c <count> ] 
@@ -46,7 +46,7 @@ usage: $0 [-r <regex> ]
 	  Delimiter: ","
 EOF
 
-	return 0
+	return
 }
 
 donline_loadLibs(){
@@ -231,22 +231,22 @@ donline_getOnline(){
 
 main(){
 	donline_loadLibs || {
-		clog "[main()]" Could not load libraries!
+		clog 1 "[main()]" Could not load libraries!
 		return 1
 	}
 
 	donline_parseArgs $@ || {
-		clog "[main()]" Could not parse cli options!
+		clog 1 "[foomain()]" Could not parse cli options!
 		return 1
 	}
 
 	donline_init || {
-		clog "[main()]" Could not initialize main!
+		clog 1 "[main()]" Could not initialize main!
 		return 1
 	}
 
 	donline_getOnline || {
-		clog "[main()]" Execution of donline_getOnline failed!
+		clog 1 "[main()]" Execution of donline_getOnline failed!
 		return 1
 	}
 

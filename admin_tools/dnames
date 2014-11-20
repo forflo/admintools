@@ -16,7 +16,7 @@ $0 [ -r <regex> ] [ -f <alternative machine file> ] [ -c ]
 	-c := Print out a comma separated list of values
 EOF
 
-	return 
+	return 0
 }
 
 dnames_loadLibs(){
