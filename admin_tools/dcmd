@@ -4,13 +4,6 @@
 # Datum: 7.Sept.2013
 # Depends: shellyCode
 #
-# $0 	[-g <group> | --nreg <regex> | --ipreg <regex>] 
-#	[ -u <user> ] 
-#	[ -s ] 
-#	[ -p <portnumber> ] 
-#	[ --simultaneous ]
-#	<command>
-#
 ##
 
 OPTSTRING="g:r:u:qsp:f:o:dm:"
@@ -63,6 +56,10 @@ dcmd_init(){
 	local temp=()
 	local dir=0
 
+	if [ ! -d ${OUTDIR} ]; then
+		mkdir -p ${OUTDIR}
+	fi
+
 	if [ -n "$REG" ]; then
 		mapfile temp < <(grep -E "$REG" $MACHINES)
 	elif [ -n "$GROUP" ]; then
@@ -92,7 +89,7 @@ dcmd_init(){
 
 help(){
 	clog 2 <<EOF
-$0 	[ -g <group> | -r <regex> | -m <regex> ] 
+$0 	[ -g <group> | -r <regex> | -m <csv computernames> ] 
     [ -u <user> ] 
     [ -f <machinefile> ]
     [ -q ] 

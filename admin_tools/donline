@@ -168,7 +168,11 @@ donline_getOnline(){
 					basem -k $BASEM -p
 					##
 					# appends the computername to the shm segment
-					bashm -k $BASHM -s "$(bashm -k $BASHM -g),${NAME[i]}"
+					if [ -z "$(bashm -k $BASHM -g)" ]; then
+						bashm -k $BASHM -s "${NAME[i]}"
+					else 
+						bashm -k $BASHM -s "$(bashm -k $BASHM -g),${NAME[i]}"
+					fi
 					##
 					# leave critical stage
 					basem -k $BASEM -v 
