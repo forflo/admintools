@@ -1,21 +1,21 @@
 #<name> <macaddress> <ipaddress (optional)> <groupname (optional)>
 #B008A
-NTB008A01.inf.fh-rosenheim.de  00:0f:fe:dc:f3:bc none B008A
-NTB008A02.inf.fh-rosenheim.de  00:0f:fe:dd:7a:8d none B008A
-NTB008A03.inf.fh-rosenheim.de  00:0f:fe:dd:7f:e1 none B008A
-NTB008A04.inf.fh-rosenheim.de  00:0f:fe:dd:84:4f none B008A
-NTB008A05.inf.fh-rosenheim.de  00:0f:fe:dd:79:89 none B008A
-NTB008A06.inf.fh-rosenheim.de  00:0f:fe:dd:7d:bb none B008A
-NTB008A07.inf.fh-rosenheim.de  00:0f:fe:dd:77:7b none B008A
-NTB008A08.inf.fh-rosenheim.de  00:0f:fe:dd:7a:b3 none B008A
-NTB008A09.inf.fh-rosenheim.de  00:0f:fe:d3:c9:af none B008A
-NTB008A10.inf.fh-rosenheim.de  00:0f:fe:dd:81:a7 none B008A
-NTB008A11.inf.fh-rosenheim.de  00:0f:fe:dd:83:d1 none B008A
-NTB008A12.inf.fh-rosenheim.de  00:0f:fe:dd:76:7b none B008A
-NTB008A13.inf.fh-rosenheim.de  00:0f:fe:dd:80:3d none B008A
-NTB008A14.inf.fh-rosenheim.de  00:0f:fe:dd:81:f3 none B008A
-NTB008A15.inf.fh-rosenheim.de  00:0f:fe:dd:7f:2b none B008A
-NTB008A16.inf.fh-rosenheim.de  00:0f:fe:dd:84:e7 none B008A
+NTB008A01.fh-rosenheim.priv  00:0f:fe:dc:f3:bc none B008A
+NTB008A02.fh-rosenheim.priv  00:0f:fe:dd:7a:8d none B008A
+NTB008A03.fh-rosenheim.priv  00:0f:fe:dd:7f:e1 none B008A
+NTB008A04.fh-rosenheim.priv  00:0f:fe:dd:84:4f none B008A
+NTB008A05.fh-rosenheim.priv  00:0f:fe:dd:79:89 none B008A
+NTB008A06.fh-rosenheim.priv  00:0f:fe:dd:7d:bb none B008A
+NTB008A07.fh-rosenheim.priv  00:0f:fe:dd:77:7b none B008A
+NTB008A08.fh-rosenheim.priv  00:0f:fe:dd:7a:b3 none B008A
+NTB008A09.fh-rosenheim.priv  00:0f:fe:d3:c9:af none B008A
+NTB008A10.fh-rosenheim.priv  00:0f:fe:dd:81:a7 none B008A
+NTB008A11.fh-rosenheim.priv  00:0f:fe:dd:83:d1 none B008A
+NTB008A12.fh-rosenheim.priv  00:0f:fe:dd:76:7b none B008A
+NTB008A13.fh-rosenheim.priv  00:0f:fe:dd:80:3d none B008A
+NTB008A14.fh-rosenheim.priv  00:0f:fe:dd:81:f3 none B008A
+NTB008A15.fh-rosenheim.priv  00:0f:fe:dd:7f:2b none B008A
+NTB008A16.fh-rosenheim.priv  00:0f:fe:dd:84:e7 none B008A
 
 #B011 old
 Old01108 00:0F:FE:8E:3B:3A 141.60.120.138  B008A
